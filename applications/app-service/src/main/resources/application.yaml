@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 spring:
   application:
     name: "Solicitudes"
@@ -22,7 +22,7 @@ management:
       probes:
         enabled: true
 cors:
-  allowed-origins: "http://localhost:4200,http://localhost:8080"
+  allowed-origins: "http://localhost:4200,http://localhost:8081"
 adapters:
     r2dbc:
       host: "localhost"
@@ -35,3 +35,6 @@ routes:
   paths:
     applications:
       applications: "/api/v1/solicitudes"
+    users:
+      baseUrl: "http://localhost:8080"
+      existsByDocument: "/api/v1/usuarios/{document}"

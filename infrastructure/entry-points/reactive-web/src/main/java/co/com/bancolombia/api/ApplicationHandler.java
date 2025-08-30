@@ -19,12 +19,10 @@ public class ApplicationHandler {
     private final RequestValidator requestValidator;
     private final ApplicationDtoMapper applicationDtoMapper;
 
-    public Mono<ServerResponse> listenPOSTUseCase(ServerRequest serverRequest) {
+    public Mono<ServerResponse> listenPOSTApplication(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(CreateApplicationDto.class)
                 .flatMap(requestValidator::validator)
-                .doOnNext(System.out::println)
-                .flatMap(createApplicationDto -> applicationUseCase.save(applicationDtoMapper.toApplication(createApplicationDto), createApplicationDto.typeLoanName()))
-                .doOnNext(System.out::println)
+                .flatMap(createApplicationDto -> applicationUseCase.save(applicationDtoMapper.toApplication(createApplicationDto), createApplicationDto.typeLoanName(), createApplicationDto.document()))
                 .flatMap(application -> ServerResponse.status(201).bodyValue(new ResponseDto<Application>("Application created successfully", "201-00", application)));
     }
 }

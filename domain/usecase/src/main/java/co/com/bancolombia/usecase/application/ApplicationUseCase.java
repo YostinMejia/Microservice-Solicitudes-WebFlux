@@ -7,6 +7,7 @@ import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
+import co.com.bancolombia.model.user.UserQueryGateway;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -17,21 +18,24 @@ public class ApplicationUseCase {
     private final TypeLoanRepository typeLoanRepository;
     private final StateRepository stateRepository;
     private final TransactionalOperatorGateway transactionalOperatorGateway;
+    private final UserQueryGateway userQueryGateway;
 
-    public Mono<Application> save(Application application, String typeLoanName) {
+    public Mono<Application> save(Application application, String typeLoanName, String userDocument) {
         final State initialState = new State().toBuilder().name("Pendiente de revisión").build();
 
         return transactionalOperatorGateway.execute(
-
-                typeLoanRepository.findByName(typeLoanName)
-                .switchIfEmpty(Mono.error(new BusinessException(null, "type of loan does not exist", "B400-00")))
-                .flatMap(typeLoan -> {
-                    Application application1 = application.toBuilder().idTypeLoan(typeLoan.getId()).build();
-                    return stateRepository.save(initialState).map(stateSaved -> {
-                        return application1.toBuilder().idState(stateSaved.getId()).build();
-                    });
-                })
-                .flatMap(applicationRepository::save)
+                userQueryGateway.existByDocument(userDocument)
+                        .filter(Boolean::booleanValue)
+                        .switchIfEmpty(Mono.error(new BusinessException(null, "User does not exist", "B400-00")))
+                        .flatMap(exists->typeLoanRepository.findByName(typeLoanName))
+                        .switchIfEmpty(Mono.error(new BusinessException(null, "type of loan does not exist", "B400-00")))
+                        .flatMap(typeLoan -> {
+                            Application application1 = application.toBuilder().idTypeLoan(typeLoan.getId()).build();
+                            return stateRepository.save(initialState).map(stateSaved -> {
+                                return application1.toBuilder().idState(stateSaved.getId()).build();
+                            });
+                        })
+                        .flatMap(applicationRepository::save)
         );
     }
 }
