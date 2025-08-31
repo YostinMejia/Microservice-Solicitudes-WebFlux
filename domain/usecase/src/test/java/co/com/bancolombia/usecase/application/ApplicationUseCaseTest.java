@@ -8,6 +8,7 @@ import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.TypeLoan;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
+import co.com.bancolombia.model.user.UserQueryGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,8 +23,8 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationUseCaseTest {
@@ -42,6 +43,9 @@ class ApplicationUseCaseTest {
 
     @Mock
     private TransactionalOperatorGateway transactionalOperatorGateway;
+
+    @Mock
+    private UserQueryGateway userQueryGateway;
 
     private final UUID typeLoanId = UUID.randomUUID();
     private final UUID stateId = UUID.randomUUID();
@@ -62,7 +66,8 @@ class ApplicationUseCaseTest {
     }
 
     @Test
-    void givenValidData_whenSaveApplication_thenShouldReturnApplication() {
+    void givenUserExistsAndValidData_whenSaveApplication_thenShouldReturnApplication() {
+        // Arrange
         TypeLoan mockTypeLoan = TypeLoan.builder().id(typeLoanId).name(typeLoanName).build();
         State mockState = State.builder().id(stateId).name("Pendiente de revisión").build();
         Application applicationWithIds = testApplication.toBuilder()
@@ -70,33 +75,67 @@ class ApplicationUseCaseTest {
                 .idState(mockState.getId())
                 .build();
 
+        // Mock dependencies for the happy path
+        given(userQueryGateway.existByDocument(any(String.class))).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(typeLoanName)).willReturn(Mono.just(mockTypeLoan));
         given(stateRepository.save(any(State.class))).willReturn(Mono.just(mockState));
         given(applicationRepository.save(any(Application.class))).willReturn(Mono.just(applicationWithIds));
 
-        Mono<Application> result = applicationUseCase.save(testApplication, typeLoanName);
+        // Act
+        Mono<Application> result = applicationUseCase.save(testApplication, typeLoanName, testApplication.getDocument());
 
+        // Assert
         StepVerifier.create(result)
                 .expectNextMatches(application -> application.getIdTypeLoan().equals(typeLoanId) &&
                         application.getIdState().equals(stateId))
                 .verifyComplete();
 
+        // Verify that all gateways were called
+        verify(userQueryGateway).existByDocument(testApplication.getDocument());
         verify(typeLoanRepository).findByName(typeLoanName);
         verify(stateRepository).save(any(State.class));
         verify(applicationRepository).save(any(Application.class));
     }
 
     @Test
+    void givenUserDoesNotExist_whenSaveApplication_thenShouldReturnBusinessException() {
+        // Arrange
+        given(userQueryGateway.existByDocument(any(String.class))).willReturn(Mono.just(false));
+
+        // Act
+        Mono<Application> result = applicationUseCase.save(testApplication, typeLoanName, testApplication.getDocument());
+
+        // Assert
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable ->
+                        throwable instanceof BusinessException &&
+                                "User does not exist".equals(throwable.getMessage()))
+                .verify();
+
+        // Verify that no further gateways were called
+        verify(userQueryGateway).existByDocument(testApplication.getDocument());
+        verify(typeLoanRepository, never()).findByName(any());
+        verify(stateRepository, never()).save(any());
+        verify(applicationRepository, never()).save(any());
+    }
+
+    @Test
     void givenNonExistentTypeLoan_whenSaveApplication_thenShouldReturnBusinessException() {
+        // Arrange
+        given(userQueryGateway.existByDocument(any(String.class))).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(typeLoanName)).willReturn(Mono.empty());
 
-        Mono<Application> result = applicationUseCase.save(testApplication, typeLoanName);
+        // Act
+        Mono<Application> result = applicationUseCase.save(testApplication, typeLoanName, testApplication.getDocument());
 
+        // Assert
         StepVerifier.create(result)
                 .expectErrorMatches(throwable -> throwable instanceof BusinessException &&
                         "B400-00".equals(((BusinessException) throwable).getCode()))
                 .verify();
 
+        // Verify that the flow stopped at typeLoanRepository
+        verify(userQueryGateway).existByDocument(testApplication.getDocument());
         verify(typeLoanRepository).findByName(typeLoanName);
         verify(stateRepository, never()).save(any());
         verify(applicationRepository, never()).save(any());
@@ -104,16 +143,22 @@ class ApplicationUseCaseTest {
 
     @Test
     void givenStateSaveFails_whenSaveApplication_thenShouldPropagateError() {
+        // Arrange
         TypeLoan mockTypeLoan = TypeLoan.builder().id(typeLoanId).name(typeLoanName).build();
+        given(userQueryGateway.existByDocument(any(String.class))).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(typeLoanName)).willReturn(Mono.just(mockTypeLoan));
         given(stateRepository.save(any(State.class))).willReturn(Mono.error(new RuntimeException("DB connection failed")));
 
-        Mono<Application> result = applicationUseCase.save(testApplication, typeLoanName);
+        // Act
+        Mono<Application> result = applicationUseCase.save(testApplication, typeLoanName, testApplication.getDocument());
 
+        // Assert
         StepVerifier.create(result)
                 .expectError(RuntimeException.class)
                 .verify();
 
+        // Verify the flow stopped at stateRepository
+        verify(userQueryGateway).existByDocument(testApplication.getDocument());
         verify(typeLoanRepository).findByName(typeLoanName);
         verify(stateRepository).save(any(State.class));
         verify(applicationRepository, never()).save(any());

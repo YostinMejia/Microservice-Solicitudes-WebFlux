@@ -2,31 +2,44 @@ package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.config.ApplicationPath;
 import co.com.bancolombia.api.dto.CreateApplicationDto;
-
+import co.com.bancolombia.api.helper.RequestValidator;
+import co.com.bancolombia.api.mapper.ApplicationDtoMapperImpl;
+import co.com.bancolombia.model.TransactionalOperatorGateway;
 import co.com.bancolombia.model.application.Application;
-import co.com.bancolombia.model.dto.MultipleErrorsResponseDto;
-import co.com.bancolombia.model.dto.ResponseDto;
-import co.com.bancolombia.model.dto.SingleErrorResponseDto;
+import co.com.bancolombia.model.application.gateways.ApplicationRepository;
+import co.com.bancolombia.model.exceptions.BusinessException;
+import co.com.bancolombia.model.state.State;
+import co.com.bancolombia.model.state.gateways.StateRepository;
+import co.com.bancolombia.model.typeloan.TypeLoan;
+import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
+import co.com.bancolombia.model.user.UserQueryGateway;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
-@ContextConfiguration(classes = {RouterRest.class, ApplicationHandler.class, ApplicationPath.class})
 @WebFluxTest
+@ContextConfiguration(classes = {
+        RouterRest.class,
+        ApplicationHandler.class,
+        ApplicationPath.class,
+        ApplicationUseCase.class,
+        ApplicationDtoMapperImpl.class,
+        RequestValidator.class,
+        GlobalErrorWebExceptionHandler.class
+})
 @TestPropertySource(properties = {
         "routes.paths.applications.applications=/api/v1/solicitudes"
 })
@@ -35,117 +48,133 @@ class RouterRestTest {
     @Autowired
     private WebTestClient webTestClient;
 
+    // Mock external dependencies
     @MockitoBean
-    private ApplicationUseCase applicationUseCase;
+    private ApplicationRepository applicationRepository;
 
     @MockitoBean
-    private ApplicationHandler applicationHandler;
+    private TypeLoanRepository typeLoanRepository;
 
-    @BeforeEach
-    void setup() {
-        // You can use Mockito.reset(applicationHandler) here if needed
-    }
+    @MockitoBean
+    private StateRepository stateRepository;
+
+    @MockitoBean
+    private UserQueryGateway userQueryGateway;
+
+    @MockitoBean
+    private TransactionalOperatorGateway transactionalOperatorGateway;
+
+    @MockitoBean
+    private RequestValidator requestValidator; // 👈 lo mockeamos
+
+    private final UUID typeLoanId = UUID.randomUUID();
+    private final UUID stateId = UUID.randomUUID();
+    private final CreateApplicationDto requestDto = new CreateApplicationDto(
+            1000, "2025-12-01", "Automóvil", "12345", "test@example.com"
+    );
 
     @Test
-    void testListenPOSTUseCase_whenSuccess() {
+    void whenSuccess_shouldReturnCreatedAndHitRepository() {
         // Arrange
-        CreateApplicationDto createApplicationDto = new CreateApplicationDto(
-                1234,
-                "2025-11-12",
-                "Automóvil",
-                "12345",
-                "test@mail.com"
-        );
-
-        Application mockApplication = new Application().toBuilder()
-                .amount(1234)
-                .term(LocalDate.of(2025, 11, 12))
-                .document("12345")
-                .email("test@mail.com")
-                .build();
-
-        ResponseDto<Application> expectedResponse = new ResponseDto<>(
-                "Application created successfully", "201-00", mockApplication
-        );
-
-        given(applicationHandler.listenPOSTApplication(any()))
-                .willReturn(ServerResponse.status(201)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(expectedResponse)
-                ); // Using block() to get ServerResponse directly for mocking
+        given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
+        given(userQueryGateway.existByDocument(any())).willReturn(Mono.just(true));
+        given(typeLoanRepository.findByName(any())).willReturn(Mono.just(TypeLoan.builder().id(typeLoanId).build()));
+        given(stateRepository.save(any())).willReturn(Mono.just(State.builder().id(stateId).build()));
+        given(applicationRepository.save(any())).willReturn(Mono.just(Application.builder().id(UUID.randomUUID()).build()));
+        given(transactionalOperatorGateway.execute(any(Mono.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // Act & Assert
         webTestClient.post()
                 .uri("/api/v1/solicitudes")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(createApplicationDto)
+                .bodyValue(requestDto)
                 .exchange()
-                .expectStatus().isCreated()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody()
-                .jsonPath("$.message").isEqualTo("Application created successfully");
+                .expectStatus().isCreated();
     }
 
     @Test
-    void testListenPOSTUseCase_whenValidationFails() {
-        // Arrange
+    void whenValidationFails_shouldReturnBadRequest() {
+        // Arrange: simulamos que falla la validación
+        given(requestValidator.validator(any()))
+                .willReturn(Mono.error(new co.com.bancolombia.model.exceptions.BusinessException(
+                        null, "Create application validation failed", "B400-00"
+                )));
+
         CreateApplicationDto invalidDto = new CreateApplicationDto(
-                -100, // Invalid amount
-                "2025-11-12",
-                "Automóvil",
-                "12345",
-                "test@mail.com"
+                0, "2025-12-01", "Automóvil", "12345", "test@example.com"
         );
-
-        MultipleErrorsResponseDto responseBody = new MultipleErrorsResponseDto(
-                List.of("amount: debe ser mayor a 0"),
-                "Validation Failed",
-                "B400-00"
-        );
-
-        given(applicationHandler.listenPOSTApplication(any()))
-                .willReturn(ServerResponse.badRequest()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(responseBody)
-                );
 
         // Act & Assert
         webTestClient.post()
                 .uri("/api/v1/solicitudes")
-                .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(invalidDto)
                 .exchange()
                 .expectStatus().isBadRequest()
-                .expectBody(MultipleErrorsResponseDto.class)
-                .isEqualTo(responseBody);
+                .expectBody()
+                .jsonPath("$.message").isEqualTo("Create application validation failed");
     }
 
     @Test
-    void testListenPOSTUseCase_whenInternalErrorOccurs() {
+    void whenUserDoesNotExist_shouldReturnBadRequest() {
         // Arrange
-        CreateApplicationDto validDto = new CreateApplicationDto(
-                1000000,
-                "2025-11-12",
-                "Automóvil",
-                "12345",
-                "test@mail.com"
-        );
-
-        SingleErrorResponseDto responseBody = new SingleErrorResponseDto("Internal Server Error", "I500-00");
-
-        given(applicationHandler.listenPOSTApplication(any()))
-                .willReturn(ServerResponse.status(500)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(responseBody));
+        given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
+        given(userQueryGateway.existByDocument(any())).willReturn(Mono.just(false));
+        given(transactionalOperatorGateway.execute(any(Mono.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // Act & Assert
         webTestClient.post()
                 .uri("/api/v1/solicitudes")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(validDto)
+                .bodyValue(requestDto)
                 .exchange()
-                .expectStatus().is5xxServerError()
-                .expectBody(SingleErrorResponseDto.class)
-                .isEqualTo(responseBody);
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.message").isEqualTo("User does not exist");
+    }
+
+    @Test
+    void whenTypeLoanDoesNotExist_shouldReturnBadRequest() {
+        // Arrange
+        given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
+        given(userQueryGateway.existByDocument(any())).willReturn(Mono.just(true));
+        given(typeLoanRepository.findByName(any())).willReturn(Mono.empty());
+        given(transactionalOperatorGateway.execute(any(Mono.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        // Act & Assert
+        webTestClient.post()
+                .uri("/api/v1/solicitudes")
+                .bodyValue(requestDto)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.message").isEqualTo("type of loan does not exist");
+    }
+
+    @Test
+    void whenValidatorReturnsMultipleErrors_shouldReturnMultipleErrorsResponseDto() {
+        // Arrange
+        CreateApplicationDto invalidDto = new CreateApplicationDto(
+                0, "bad-date", "Automóvil", "", "invalid-email"
+        );
+
+        // Forzamos que el validador lance un BusinessException con lista de errores
+        given(requestValidator.validator(any()))
+                .willReturn(Mono.error(new BusinessException(
+                        List.of("amount must be > 0", "document required", "invalid email"),
+                        "Create application validation failed",
+                        "B400-01"
+                )));
+
+        // Act & Assert
+        webTestClient.post()
+                .uri("/api/v1/solicitudes")
+                .bodyValue(invalidDto)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors").isArray()
+                .jsonPath("$.errors[0]").isEqualTo("amount must be > 0")
+                .jsonPath("$.errors[1]").isEqualTo("document required")
+                .jsonPath("$.errors[2]").isEqualTo("invalid email")
+                .jsonPath("$.message").isEqualTo("Create application validation failed")
+                .jsonPath("$.code").isEqualTo("B400-01");
     }
 }

@@ -4,7 +4,6 @@ import co.com.bancolombia.api.dto.CreateApplicationDto;
 import co.com.bancolombia.api.helper.RequestValidator;
 import co.com.bancolombia.api.mapper.ApplicationDtoMapper;
 import co.com.bancolombia.model.application.Application;
-import co.com.bancolombia.model.dto.MultipleErrorsResponseDto;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
 import org.junit.jupiter.api.Test;
@@ -19,9 +18,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
@@ -32,90 +29,88 @@ class ApplicationHandlerTest {
     private ApplicationHandler applicationHandler;
 
     @Mock
-    private ApplicationUseCase applicationUseCase;
-
-    @Mock
     private RequestValidator requestValidator;
 
     @Mock
     private ApplicationDtoMapper applicationDtoMapper;
 
+    @Mock
+    private ApplicationUseCase applicationUseCase;
+
+    private final CreateApplicationDto requestDto = new CreateApplicationDto(
+            1000, "2025-12-01", "Automóvil", "12345", "test@example.com"
+    );
+
     @Test
     void listenPOSTApplication_whenSuccess_shouldReturnCreated() {
         // Arrange
-        CreateApplicationDto requestDto = new CreateApplicationDto(
-                1000, "2025-12-01", "Automóvil", "12345", "test@example.com"
-        );
         Application domainApplication = Application.builder().amount(1000).term(LocalDate.of(2025, 12, 1)).build();
         Application savedApplication = domainApplication.toBuilder().id(UUID.randomUUID()).build();
 
-        given(requestValidator.validator(any(CreateApplicationDto.class))).willReturn(Mono.error(new BusinessException(List.of("amount: debe ser mayor que o igual a 1"), "Create application validation failed", "B400-00")));
+        // Mock dependencies to pass
+        given(requestValidator.validator(any(CreateApplicationDto.class))).willReturn(Mono.just(requestDto));
         given(applicationDtoMapper.toApplication(any(CreateApplicationDto.class))).willReturn(domainApplication);
-        given(applicationUseCase.save(any(Application.class), any(String.class))).willReturn(Mono.just(savedApplication));
+        given(applicationUseCase.save(any(Application.class), any(String.class), any(String.class)))
+                .willReturn(Mono.just(savedApplication));
 
         MockServerRequest serverRequest = MockServerRequest.builder()
                 .body(Mono.just(requestDto));
 
-        Mono<ServerResponse> responseMono = applicationHandler.listenPOSTApplication(serverRequest);
-
-        StepVerifier.create(responseMono)
+        // Act & Assert
+        StepVerifier.create(applicationHandler.listenPOSTApplication(serverRequest))
                 .expectNextMatches(response -> response.statusCode() == HttpStatus.CREATED)
                 .verifyComplete();
     }
 
     @Test
-    void listenPOSTApplication_whenValidationFails_shouldPropagateException() {
+    void listenPOSTApplication_whenUserDoesNotExist_shouldReturnBadRequest() {
         // Arrange
-        CreateApplicationDto invalidDto = new CreateApplicationDto(
-                0, "2025-12-01", "Automóvil", "12345", "test@example.com"
-        );
-
-        // Given that the RequestValidator throws a BusinessException
-        given(requestValidator.validator(any(CreateApplicationDto.class)))
-                .willReturn(Mono.error(new BusinessException(
-                        List.of("amount: debe ser mayor que o igual a 1"),
-                        "Create application validation failed",
-                        "B400-00"
-                )));
+        given(requestValidator.validator(any(CreateApplicationDto.class))).willReturn(Mono.just(requestDto));
+        given(applicationDtoMapper.toApplication(any(CreateApplicationDto.class))).willReturn(Application.builder().build());
+        given(applicationUseCase.save(any(Application.class), any(String.class), any(String.class)))
+                .willReturn(Mono.error(new BusinessException(null, "User does not exist", "B400-00")));
 
         MockServerRequest serverRequest = MockServerRequest.builder()
-                .body(Mono.just(invalidDto));
+                .body(Mono.just(requestDto));
 
-        // Act
-        Mono<ServerResponse> responseMono = applicationHandler.listenPOSTApplication(serverRequest);
-
-        // Assert
-        // The handler should propagate the exception without handling it
-        StepVerifier.create(responseMono)
-                .expectErrorMatches(throwable ->
-                        throwable instanceof BusinessException &&
-                                "B400-00".equals(((BusinessException) throwable).getCode())
-                )
+        // Act & Assert
+        StepVerifier.create(applicationHandler.listenPOSTApplication(serverRequest))
+                .expectErrorMatches(throwable -> throwable instanceof BusinessException)
                 .verify();
     }
 
     @Test
-    void listenPOSTApplication_whenUseCaseThrowsBusinessException_shouldReturnBadRequest() {
+    void listenPOSTApplication_whenValidationFails_shouldReturnBadRequest() {
         // Arrange
-        CreateApplicationDto requestDto = new CreateApplicationDto(
-                1000, "2025-12-01", "Automóvil", "12345", "test@example.com"
+        CreateApplicationDto invalidDto = new CreateApplicationDto(
+                -100, "2025-12-01", "Automóvil", "12345", "test@example.com"
         );
-        Application domainApplication = Application.builder().amount(1000).term(LocalDate.of(2025, 12, 1)).build();
+        given(requestValidator.validator(any(CreateApplicationDto.class))).willReturn(Mono.error(new BusinessException(
+                null, "Create application validation failed", "B400-00"
+        )));
 
-        // Mock dependencies to throw the exception
+        MockServerRequest serverRequest = MockServerRequest.builder()
+                .body(Mono.just(invalidDto));
+
+        // Act & Assert
+        StepVerifier.create(applicationHandler.listenPOSTApplication(serverRequest))
+                .expectErrorMatches(throwable -> throwable instanceof BusinessException)
+                .verify();
+    }
+
+    @Test
+    void listenPOSTApplication_whenTypeLoanDoesNotExist_shouldReturnBadRequest() {
+        // Arrange
         given(requestValidator.validator(any(CreateApplicationDto.class))).willReturn(Mono.just(requestDto));
-        given(applicationDtoMapper.toApplication(any(CreateApplicationDto.class))).willReturn(domainApplication);
-        given(applicationUseCase.save(any(Application.class), any(String.class)))
+        given(applicationDtoMapper.toApplication(any(CreateApplicationDto.class))).willReturn(Application.builder().build());
+        given(applicationUseCase.save(any(Application.class), any(String.class), any(String.class)))
                 .willReturn(Mono.error(new BusinessException(null, "type of loan does not exist", "B400-00")));
 
         MockServerRequest serverRequest = MockServerRequest.builder()
                 .body(Mono.just(requestDto));
 
         // Act & Assert
-        Mono<ServerResponse> responseMono = applicationHandler.listenPOSTApplication(serverRequest);
-
-        // Expect the reactive stream to throw the exception
-        StepVerifier.create(responseMono)
+        StepVerifier.create(applicationHandler.listenPOSTApplication(serverRequest))
                 .expectErrorMatches(throwable -> throwable instanceof BusinessException)
                 .verify();
     }
