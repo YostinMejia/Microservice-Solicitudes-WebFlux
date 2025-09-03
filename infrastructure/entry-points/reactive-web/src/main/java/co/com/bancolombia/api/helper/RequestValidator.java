@@ -2,6 +2,7 @@ package co.com.bancolombia.api.helper;
 
 import co.com.bancolombia.api.dto.CreateApplicationDto;
 import co.com.bancolombia.model.exceptions.BusinessException;
+import co.com.bancolombia.model.utils.BusinessErrorCode;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class RequestValidator {
             }
 
             final List<String> listErrors = errors.stream().map(er -> String.format("%s: %s", er.getPropertyPath(), er.getMessage())).toList();
-            return Mono.error(new BusinessException(listErrors, "Create application validation failed", "B400-00"));
+            return Mono.error(new BusinessException(listErrors, BusinessErrorCode.VALIDATION_FAILED));
 
         });
 

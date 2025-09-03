@@ -1,9 +1,9 @@
 package co.com.bancolombia.config;
 
+import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,8 +63,8 @@ class UseCasesConfigTest {
         }
 
         @Bean
-        public co.com.bancolombia.model.user.UserQueryGateway userQueryGateway() {
-            return Mockito.mock(co.com.bancolombia.model.user.UserQueryGateway.class);
+        public UserGateway userQueryGateway() {
+            return Mockito.mock(UserGateway.class);
         }
     }
 }

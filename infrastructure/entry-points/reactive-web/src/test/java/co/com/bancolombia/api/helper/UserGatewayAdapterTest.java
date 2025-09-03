@@ -17,10 +17,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UserQueryAdapterTest {
+class UserGatewayAdapterTest {
 
     @InjectMocks
-    private UserQueryAdapter userQueryAdapter;
+    private UserGatewayAdapter userGatewayAdapter;
 
     // Use @Mock for all dependencies for a consistent unit testing approach.
     @Mock
@@ -57,7 +57,7 @@ class UserQueryAdapterTest {
                 .thenReturn(Mono.just(responseDto));
 
         // Act
-        Mono<Boolean> result = userQueryAdapter.existByDocument(document);
+        Mono<Boolean> result = userGatewayAdapter.existByDocument(document);
 
         // Assert
         StepVerifier.create(result)
@@ -78,7 +78,7 @@ class UserQueryAdapterTest {
                 .thenReturn(Mono.just(responseDto));
 
         // Act
-        Mono<Boolean> result = userQueryAdapter.existByDocument(document);
+        Mono<Boolean> result = userGatewayAdapter.existByDocument(document);
 
         // Assert
         StepVerifier.create(result)

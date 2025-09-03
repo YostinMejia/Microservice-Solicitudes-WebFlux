@@ -12,12 +12,11 @@ import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.TypeLoan;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
-import co.com.bancolombia.model.user.UserQueryGateway;
+import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -59,7 +58,7 @@ class RouterRestTest {
     private StateRepository stateRepository;
 
     @MockitoBean
-    private UserQueryGateway userQueryGateway;
+    private UserGateway userGateway;
 
     @MockitoBean
     private TransactionalOperatorGateway transactionalOperatorGateway;
@@ -77,7 +76,7 @@ class RouterRestTest {
     void whenSuccess_shouldReturnCreatedAndHitRepository() {
         // Arrange
         given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
-        given(userQueryGateway.existByDocument(any())).willReturn(Mono.just(true));
+        given(userGateway.existByDocument(any())).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(any())).willReturn(Mono.just(TypeLoan.builder().id(typeLoanId).build()));
         given(stateRepository.save(any())).willReturn(Mono.just(State.builder().id(stateId).build()));
         given(applicationRepository.save(any())).willReturn(Mono.just(Application.builder().id(UUID.randomUUID()).build()));
@@ -117,7 +116,7 @@ class RouterRestTest {
     void whenUserDoesNotExist_shouldReturnBadRequest() {
         // Arrange
         given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
-        given(userQueryGateway.existByDocument(any())).willReturn(Mono.just(false));
+        given(userGateway.existByDocument(any())).willReturn(Mono.just(false));
         given(transactionalOperatorGateway.execute(any(Mono.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // Act & Assert
@@ -134,7 +133,7 @@ class RouterRestTest {
     void whenTypeLoanDoesNotExist_shouldReturnBadRequest() {
         // Arrange
         given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
-        given(userQueryGateway.existByDocument(any())).willReturn(Mono.just(true));
+        given(userGateway.existByDocument(any())).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(any())).willReturn(Mono.empty());
         given(transactionalOperatorGateway.execute(any(Mono.class))).willAnswer(invocation -> invocation.getArgument(0));
 

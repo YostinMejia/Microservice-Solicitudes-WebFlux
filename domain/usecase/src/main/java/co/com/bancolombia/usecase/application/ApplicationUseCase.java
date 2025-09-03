@@ -7,7 +7,9 @@ import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
-import co.com.bancolombia.model.user.UserQueryGateway;
+import co.com.bancolombia.model.user.UserGateway;
+import co.com.bancolombia.model.utils.BusinessErrorCode;
+import co.com.bancolombia.model.utils.DefaultProperties;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -18,22 +20,22 @@ public class ApplicationUseCase {
     private final TypeLoanRepository typeLoanRepository;
     private final StateRepository stateRepository;
     private final TransactionalOperatorGateway transactionalOperatorGateway;
-    private final UserQueryGateway userQueryGateway;
+    private final UserGateway userGateway;
 
     public Mono<Application> save(Application application, String typeLoanName, String userDocument) {
-        final State initialState = new State().toBuilder().name("Pendiente de revisión").build();
+        final State initialState = new State().toBuilder().name(DefaultProperties.INITIAL_STATE_NAME.getProperty()).build();
 
         return transactionalOperatorGateway.execute(
-                userQueryGateway.existByDocument(userDocument)
+                userGateway.existByDocument(userDocument)
                         .filter(Boolean::booleanValue)
-                        .switchIfEmpty(Mono.error(new BusinessException(null, "User does not exist", "B400-00")))
-                        .flatMap(exists->typeLoanRepository.findByName(typeLoanName))
-                        .switchIfEmpty(Mono.error(new BusinessException(null, "type of loan does not exist", "B400-00")))
+                        .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.USER_NOT_FOUND)))
+                        .flatMap(exists -> typeLoanRepository.findByName(typeLoanName))
+                        .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.TYPE_LOAN_NOT_FOUND)))
                         .flatMap(typeLoan -> {
                             Application application1 = application.toBuilder().idTypeLoan(typeLoan.getId()).build();
-                            return stateRepository.save(initialState).map(stateSaved -> {
-                                return application1.toBuilder().idState(stateSaved.getId()).build();
-                            });
+                            return stateRepository.save(initialState).map(stateSaved ->
+                                    application1.toBuilder().idState(stateSaved.getId()).build()
+                            );
                         })
                         .flatMap(applicationRepository::save)
         );

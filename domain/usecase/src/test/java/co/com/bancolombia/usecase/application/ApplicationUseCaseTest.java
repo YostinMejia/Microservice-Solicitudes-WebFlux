@@ -8,7 +8,7 @@ import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.TypeLoan;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
-import co.com.bancolombia.model.user.UserQueryGateway;
+import co.com.bancolombia.model.user.UserGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,7 +45,7 @@ class ApplicationUseCaseTest {
     private TransactionalOperatorGateway transactionalOperatorGateway;
 
     @Mock
-    private UserQueryGateway userQueryGateway;
+    private UserGateway userGateway;
 
     private final UUID typeLoanId = UUID.randomUUID();
     private final UUID stateId = UUID.randomUUID();
@@ -76,7 +76,7 @@ class ApplicationUseCaseTest {
                 .build();
 
         // Mock dependencies for the happy path
-        given(userQueryGateway.existByDocument(any(String.class))).willReturn(Mono.just(true));
+        given(userGateway.existByDocument(any(String.class))).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(typeLoanName)).willReturn(Mono.just(mockTypeLoan));
         given(stateRepository.save(any(State.class))).willReturn(Mono.just(mockState));
         given(applicationRepository.save(any(Application.class))).willReturn(Mono.just(applicationWithIds));
@@ -91,7 +91,7 @@ class ApplicationUseCaseTest {
                 .verifyComplete();
 
         // Verify that all gateways were called
-        verify(userQueryGateway).existByDocument(testApplication.getDocument());
+        verify(userGateway).existByDocument(testApplication.getDocument());
         verify(typeLoanRepository).findByName(typeLoanName);
         verify(stateRepository).save(any(State.class));
         verify(applicationRepository).save(any(Application.class));
@@ -100,7 +100,7 @@ class ApplicationUseCaseTest {
     @Test
     void givenUserDoesNotExist_whenSaveApplication_thenShouldReturnBusinessException() {
         // Arrange
-        given(userQueryGateway.existByDocument(any(String.class))).willReturn(Mono.just(false));
+        given(userGateway.existByDocument(any(String.class))).willReturn(Mono.just(false));
 
         // Act
         Mono<Application> result = applicationUseCase.save(testApplication, typeLoanName, testApplication.getDocument());
@@ -113,7 +113,7 @@ class ApplicationUseCaseTest {
                 .verify();
 
         // Verify that no further gateways were called
-        verify(userQueryGateway).existByDocument(testApplication.getDocument());
+        verify(userGateway).existByDocument(testApplication.getDocument());
         verify(typeLoanRepository, never()).findByName(any());
         verify(stateRepository, never()).save(any());
         verify(applicationRepository, never()).save(any());
@@ -122,7 +122,7 @@ class ApplicationUseCaseTest {
     @Test
     void givenNonExistentTypeLoan_whenSaveApplication_thenShouldReturnBusinessException() {
         // Arrange
-        given(userQueryGateway.existByDocument(any(String.class))).willReturn(Mono.just(true));
+        given(userGateway.existByDocument(any(String.class))).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(typeLoanName)).willReturn(Mono.empty());
 
         // Act
@@ -135,7 +135,7 @@ class ApplicationUseCaseTest {
                 .verify();
 
         // Verify that the flow stopped at typeLoanRepository
-        verify(userQueryGateway).existByDocument(testApplication.getDocument());
+        verify(userGateway).existByDocument(testApplication.getDocument());
         verify(typeLoanRepository).findByName(typeLoanName);
         verify(stateRepository, never()).save(any());
         verify(applicationRepository, never()).save(any());
@@ -145,7 +145,7 @@ class ApplicationUseCaseTest {
     void givenStateSaveFails_whenSaveApplication_thenShouldPropagateError() {
         // Arrange
         TypeLoan mockTypeLoan = TypeLoan.builder().id(typeLoanId).name(typeLoanName).build();
-        given(userQueryGateway.existByDocument(any(String.class))).willReturn(Mono.just(true));
+        given(userGateway.existByDocument(any(String.class))).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(typeLoanName)).willReturn(Mono.just(mockTypeLoan));
         given(stateRepository.save(any(State.class))).willReturn(Mono.error(new RuntimeException("DB connection failed")));
 
@@ -158,7 +158,7 @@ class ApplicationUseCaseTest {
                 .verify();
 
         // Verify the flow stopped at stateRepository
-        verify(userQueryGateway).existByDocument(testApplication.getDocument());
+        verify(userGateway).existByDocument(testApplication.getDocument());
         verify(typeLoanRepository).findByName(typeLoanName);
         verify(stateRepository).save(any(State.class));
         verify(applicationRepository, never()).save(any());

@@ -2,6 +2,6 @@ package co.com.bancolombia.model.user;
 
 import reactor.core.publisher.Mono;
 
-public interface UserQueryGateway {
+public interface UserGateway {
     Mono<Boolean> existByDocument(String document);
 }

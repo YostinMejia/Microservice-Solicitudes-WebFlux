@@ -2,10 +2,9 @@ package co.com.bancolombia.api.helper;
 
 import co.com.bancolombia.api.config.UserPath;
 import co.com.bancolombia.model.dto.ResponseDto;
-import co.com.bancolombia.model.user.UserQueryGateway;
+import co.com.bancolombia.model.user.UserGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -13,7 +12,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-public class UserQueryAdapter implements UserQueryGateway {
+public class UserGatewayAdapter implements UserGateway {
 
     private final UserPath userPath;
     private final WebClient webClient;

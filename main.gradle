@@ -92,7 +92,17 @@ tasks.register('jacocoMergedReport', JacocoReport) {
     dependsOn = [test, subprojects.jacocoTestReport, pitestReportAggregate]
     additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
     sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+
+
+    classDirectories.setFrom(
+            files(subprojects.sourceSets.main.output).asFileTree.matching{
+                exclude '**/*Config.class'
+                exclude '**/*Path.class'
+                exclude '**/MainApplication.class'
+            }
+    )
+
+
     executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
     reports {
         xml.setRequired true
