@@ -13,6 +13,7 @@ import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.TypeLoan;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
 import co.com.bancolombia.model.user.UserGateway;
+import co.com.bancolombia.model.utils.BusinessErrorCode;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,10 +93,11 @@ class RouterRestTest {
 
     @Test
     void whenValidationFails_shouldReturnBadRequest() {
-        // Arrange: simulamos que falla la validación
+        // Arrange
         given(requestValidator.validator(any()))
-                .willReturn(Mono.error(new co.com.bancolombia.model.exceptions.BusinessException(
-                        null, "Create application validation failed", "B400-00"
+                .willReturn(Mono.error(new BusinessException(
+                        List.of("amount must be > 0"),
+                        BusinessErrorCode.VALIDATION_FAILED
                 )));
 
         CreateApplicationDto invalidDto = new CreateApplicationDto(
@@ -109,7 +111,8 @@ class RouterRestTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.message").isEqualTo("Create application validation failed");
+                .jsonPath("$.message").isEqualTo(BusinessErrorCode.VALIDATION_FAILED.getMessage())
+                .jsonPath("$.code").isEqualTo(BusinessErrorCode.VALIDATION_FAILED.getBusinessCode());
     }
 
     @Test
@@ -126,7 +129,8 @@ class RouterRestTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.message").isEqualTo("User does not exist");
+                .jsonPath("$.message").isEqualTo(BusinessErrorCode.USER_NOT_FOUND.getMessage())
+                .jsonPath("$.code").isEqualTo(BusinessErrorCode.USER_NOT_FOUND.getBusinessCode());
     }
 
     @Test
@@ -144,7 +148,8 @@ class RouterRestTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.message").isEqualTo("type of loan does not exist");
+                .jsonPath("$.message").isEqualTo(BusinessErrorCode.TYPE_LOAN_NOT_FOUND.getMessage())
+                .jsonPath("$.code").isEqualTo(BusinessErrorCode.TYPE_LOAN_NOT_FOUND.getBusinessCode());
     }
 
     @Test
@@ -154,12 +159,10 @@ class RouterRestTest {
                 0, "bad-date", "Automóvil", "", "invalid-email"
         );
 
-        // Forzamos que el validador lance un BusinessException con lista de errores
         given(requestValidator.validator(any()))
                 .willReturn(Mono.error(new BusinessException(
                         List.of("amount must be > 0", "document required", "invalid email"),
-                        "Create application validation failed",
-                        "B400-01"
+                        BusinessErrorCode.VALIDATION_FAILED
                 )));
 
         // Act & Assert
@@ -173,7 +176,8 @@ class RouterRestTest {
                 .jsonPath("$.errors[0]").isEqualTo("amount must be > 0")
                 .jsonPath("$.errors[1]").isEqualTo("document required")
                 .jsonPath("$.errors[2]").isEqualTo("invalid email")
-                .jsonPath("$.message").isEqualTo("Create application validation failed")
-                .jsonPath("$.code").isEqualTo("B400-01");
+                .jsonPath("$.message").isEqualTo(BusinessErrorCode.VALIDATION_FAILED.getMessage())
+                .jsonPath("$.code").isEqualTo(BusinessErrorCode.VALIDATION_FAILED.getBusinessCode());
     }
+
 }

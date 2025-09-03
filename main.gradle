@@ -99,6 +99,7 @@ tasks.register('jacocoMergedReport', JacocoReport) {
                 exclude '**/*Config.class'
                 exclude '**/*Path.class'
                 exclude '**/MainApplication.class'
+                exclude '**/RequestValidator.class'
             }
     )
 

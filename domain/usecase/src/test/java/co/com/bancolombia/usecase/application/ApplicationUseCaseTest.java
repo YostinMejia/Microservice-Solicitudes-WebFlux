@@ -9,6 +9,7 @@ import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.TypeLoan;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
 import co.com.bancolombia.model.user.UserGateway;
+import co.com.bancolombia.model.utils.BusinessErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -96,7 +97,6 @@ class ApplicationUseCaseTest {
         verify(stateRepository).save(any(State.class));
         verify(applicationRepository).save(any(Application.class));
     }
-
     @Test
     void givenUserDoesNotExist_whenSaveApplication_thenShouldReturnBusinessException() {
         // Arrange
@@ -109,7 +109,9 @@ class ApplicationUseCaseTest {
         StepVerifier.create(result)
                 .expectErrorMatches(throwable ->
                         throwable instanceof BusinessException &&
-                                "User does not exist".equals(throwable.getMessage()))
+                                ((BusinessException) throwable).getCode().equals(BusinessErrorCode.USER_NOT_FOUND.getBusinessCode()) &&
+                                throwable.getMessage().equals(BusinessErrorCode.USER_NOT_FOUND.getMessage())
+                )
                 .verify();
 
         // Verify that no further gateways were called
@@ -130,8 +132,11 @@ class ApplicationUseCaseTest {
 
         // Assert
         StepVerifier.create(result)
-                .expectErrorMatches(throwable -> throwable instanceof BusinessException &&
-                        "B400-00".equals(((BusinessException) throwable).getCode()))
+                .expectErrorMatches(throwable ->
+                        throwable instanceof BusinessException &&
+                                ((BusinessException) throwable).getCode().equals(BusinessErrorCode.TYPE_LOAN_NOT_FOUND.getBusinessCode()) &&
+                                throwable.getMessage().equals(BusinessErrorCode.TYPE_LOAN_NOT_FOUND.getMessage())
+                )
                 .verify();
 
         // Verify that the flow stopped at typeLoanRepository
