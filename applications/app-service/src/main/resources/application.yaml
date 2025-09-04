@@ -26,7 +26,7 @@ cors:
 adapters:
     r2dbc:
       host: "localhost"
-      port: 5432
+      port: 5434
       database: "solicitudes"
       schema: "public"
       username: "postgres"
@@ -35,6 +35,9 @@ routes:
   paths:
     applications:
       applications: "/api/v1/solicitudes"
-    users:
+    auth-microservice:
       baseUrl: "http://localhost:8080"
-      existsByDocument: "/api/v1/usuarios/{document}"
+      users:
+        existsByDocumentAndEmail: "/api/v1/usuarios/exists"
+      auth:
+        isSameEmailAsToken: "/api/v1/auth/same-email"

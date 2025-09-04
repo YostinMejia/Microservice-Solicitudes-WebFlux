@@ -1,8 +1,9 @@
 package co.com.bancolombia.api;
 
-import co.com.bancolombia.api.dto.CreateApplicationDto;
+import co.com.bancolombia.api.application.ApplicationHandler;
+import co.com.bancolombia.api.application.dto.CreateApplicationDto;
 import co.com.bancolombia.api.helper.RequestValidator;
-import co.com.bancolombia.api.mapper.ApplicationDtoMapper;
+import co.com.bancolombia.api.application.mapper.ApplicationDtoMapper;
 import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
@@ -14,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.reactive.function.server.MockServerRequest;
-import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 

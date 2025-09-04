@@ -1,7 +1,8 @@
 package co.com.bancolombia.api;
 
-import co.com.bancolombia.api.config.ApplicationPath;
-import co.com.bancolombia.api.dto.CreateApplicationDto;
+import co.com.bancolombia.api.application.ApplicationHandler;
+import co.com.bancolombia.api.application.config.ApplicationPath;
+import co.com.bancolombia.api.application.dto.CreateApplicationDto;
 import co.com.bancolombia.model.dto.MultipleErrorsResponseDto;
 import co.com.bancolombia.model.dto.ResponseDto;
 import co.com.bancolombia.model.dto.SingleErrorResponseDto;

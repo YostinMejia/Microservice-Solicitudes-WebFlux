@@ -1,5 +1,9 @@
 package co.com.bancolombia.api.config;
 
+import co.com.bancolombia.api.application.config.ApplicationPath;
+
+import co.com.bancolombia.api.authMicroservice.config.WebClientConfig;
+import co.com.bancolombia.api.authMicroservice.user.config.UserPath;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;

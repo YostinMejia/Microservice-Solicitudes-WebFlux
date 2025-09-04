@@ -1,4 +1,4 @@
-package co.com.bancolombia.api.dto;
+package co.com.bancolombia.api.application.dto;
 
 
 import jakarta.validation.constraints.*;

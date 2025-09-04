@@ -1,6 +1,5 @@
 package co.com.bancolombia.api.helper;
 
-import co.com.bancolombia.api.dto.CreateApplicationDto;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
 import jakarta.validation.ConstraintViolation;
@@ -18,12 +17,12 @@ public class RequestValidator {
 
     private final Validator validator;
 
-    public Mono<CreateApplicationDto> validator(CreateApplicationDto createApplicationDto) {
+    public <T> Mono<T> validator(T dto) {
 
         return Mono.defer(() -> {
-            final Set<ConstraintViolation<CreateApplicationDto>> errors = validator.validate(createApplicationDto);
+            final Set<ConstraintViolation<T>> errors = validator.validate(dto);
             if (errors.isEmpty()) {
-                return Mono.just(createApplicationDto);
+                return Mono.just(dto);
             }
 
             final List<String> listErrors = errors.stream().map(er -> String.format("%s: %s", er.getPropertyPath(), er.getMessage())).toList();

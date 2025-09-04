@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.solicitud
     monto integer NOT NULL,
     plazo date NOT NULL,
     email character varying COLLATE pg_catalog."default",
-    document character varying COLLATE pg_catalog."default" NOT NULL,
+    documento character varying COLLATE pg_catalog."default" NOT NULL,
     id_estado uuid NOT NULL,
     id_tipo_prestamo uuid NOT NULL,
     CONSTRAINT solicitud_pkey PRIMARY KEY (id_solicitud)

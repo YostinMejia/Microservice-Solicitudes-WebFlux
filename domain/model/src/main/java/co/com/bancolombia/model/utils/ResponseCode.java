@@ -3,14 +3,14 @@ package co.com.bancolombia.model.utils;
 import lombok.Getter;
 
 @Getter
-public enum ResponseCode {
+public enum ResponseCode implements ResponseMessage {
     APPLICATION_CREATED("201-00", "Application created successfully");
 
-    private final String code;
+    private final String businessCode;
     private final String message;
 
-    ResponseCode(String code, String message) {
-        this.code = code;
+    ResponseCode(String businessCode, String message) {
+        this.businessCode = businessCode;
         this.message = message;
     }
 }

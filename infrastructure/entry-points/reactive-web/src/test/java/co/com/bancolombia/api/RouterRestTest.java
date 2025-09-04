@@ -1,7 +1,8 @@
 package co.com.bancolombia.api;
 
-import co.com.bancolombia.api.config.ApplicationPath;
-import co.com.bancolombia.api.dto.CreateApplicationDto;
+import co.com.bancolombia.api.application.ApplicationHandler;
+import co.com.bancolombia.api.application.config.ApplicationPath;
+import co.com.bancolombia.api.application.dto.CreateApplicationDto;
 import co.com.bancolombia.api.helper.RequestValidator;
 import co.com.bancolombia.api.mapper.ApplicationDtoMapperImpl;
 import co.com.bancolombia.model.TransactionalOperatorGateway;
@@ -77,7 +78,7 @@ class RouterRestTest {
     void whenSuccess_shouldReturnCreatedAndHitRepository() {
         // Arrange
         given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
-        given(userGateway.existByDocument(any())).willReturn(Mono.just(true));
+        given(userGateway.existByDocumentAndEmail(any(), )).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(any())).willReturn(Mono.just(TypeLoan.builder().id(typeLoanId).build()));
         given(stateRepository.save(any())).willReturn(Mono.just(State.builder().id(stateId).build()));
         given(applicationRepository.save(any())).willReturn(Mono.just(Application.builder().id(UUID.randomUUID()).build()));
@@ -119,7 +120,7 @@ class RouterRestTest {
     void whenUserDoesNotExist_shouldReturnBadRequest() {
         // Arrange
         given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
-        given(userGateway.existByDocument(any())).willReturn(Mono.just(false));
+        given(userGateway.existByDocumentAndEmail(any(), )).willReturn(Mono.just(false));
         given(transactionalOperatorGateway.execute(any(Mono.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // Act & Assert
@@ -137,7 +138,7 @@ class RouterRestTest {
     void whenTypeLoanDoesNotExist_shouldReturnBadRequest() {
         // Arrange
         given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
-        given(userGateway.existByDocument(any())).willReturn(Mono.just(true));
+        given(userGateway.existByDocumentAndEmail(any(), )).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(any())).willReturn(Mono.empty());
         given(transactionalOperatorGateway.execute(any(Mono.class))).willAnswer(invocation -> invocation.getArgument(0));
 

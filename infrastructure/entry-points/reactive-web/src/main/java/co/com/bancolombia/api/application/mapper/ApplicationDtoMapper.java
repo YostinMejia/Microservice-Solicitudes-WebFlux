@@ -1,6 +1,7 @@
-package co.com.bancolombia.api.mapper;
+package co.com.bancolombia.api.application.mapper;
 
-import co.com.bancolombia.api.dto.CreateApplicationDto;
+import co.com.bancolombia.api.application.dto.ApplicationResponseDataDto;
+import co.com.bancolombia.api.application.dto.CreateApplicationDto;
 import co.com.bancolombia.model.application.Application;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -13,5 +14,7 @@ public interface ApplicationDtoMapper {
     @Mapping(target = "idTypeLoan", ignore = true)
     @Mapping(target = "id", ignore = true)
     Application toApplication(CreateApplicationDto createApplicationDto);
+
+    ApplicationResponseDataDto toResponseData(Application application);
 
 }

@@ -1,6 +1,7 @@
 package co.com.bancolombia.api.helper;
 
-import co.com.bancolombia.api.config.UserPath;
+import co.com.bancolombia.api.authMicroservice.user.UserGatewayAdapter;
+import co.com.bancolombia.api.authMicroservice.user.config.UserPath;
 import co.com.bancolombia.model.dto.ResponseDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,7 +58,7 @@ class UserGatewayAdapterTest {
                 .thenReturn(Mono.just(responseDto));
 
         // Act
-        Mono<Boolean> result = userGatewayAdapter.existByDocument(document);
+        Mono<Boolean> result = userGatewayAdapter.existByDocumentAndEmail(document, );
 
         // Assert
         StepVerifier.create(result)
@@ -78,7 +79,7 @@ class UserGatewayAdapterTest {
                 .thenReturn(Mono.just(responseDto));
 
         // Act
-        Mono<Boolean> result = userGatewayAdapter.existByDocument(document);
+        Mono<Boolean> result = userGatewayAdapter.existByDocumentAndEmail(document, );
 
         // Assert
         StepVerifier.create(result)

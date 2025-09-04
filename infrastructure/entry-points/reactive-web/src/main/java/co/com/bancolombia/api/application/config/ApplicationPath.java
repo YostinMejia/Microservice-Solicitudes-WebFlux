@@ -1,4 +1,4 @@
-package co.com.bancolombia.api.config;
+package co.com.bancolombia.api.application.config;
 
 import lombok.Getter;
 import lombok.Setter;

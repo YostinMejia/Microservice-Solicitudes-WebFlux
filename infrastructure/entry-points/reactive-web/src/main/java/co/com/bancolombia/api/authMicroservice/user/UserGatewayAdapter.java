@@ -1,6 +1,7 @@
-package co.com.bancolombia.api.helper;
+package co.com.bancolombia.api.authMicroservice.user;
 
-import co.com.bancolombia.api.config.UserPath;
+import co.com.bancolombia.api.authMicroservice.user.config.UserPath;
+import co.com.bancolombia.api.authMicroservice.user.dto.ExistsByDocumentAndEmailDto;
 import co.com.bancolombia.model.dto.ResponseDto;
 import co.com.bancolombia.model.user.UserGateway;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +19,16 @@ public class UserGatewayAdapter implements UserGateway {
     private final WebClient webClient;
 
     @Override
-    public Mono<Boolean> existByDocument(String document) {
-        return webClient.get()
-                .uri(userPath.getExistsByDocument(), document)
+    public Mono<Boolean> existByDocumentAndEmail(String document, String email , String authHeader) {
+        return webClient.post()
+                .uri(userPath.getExistsByDocumentAndEmail())
+                .header("Authorization", authHeader)
+                .bodyValue(new ExistsByDocumentAndEmailDto(document, email))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<ResponseDto<Boolean>>() {
                 })
                 .flatMap(response -> Mono.just(response.data()));
     }
+
 }
