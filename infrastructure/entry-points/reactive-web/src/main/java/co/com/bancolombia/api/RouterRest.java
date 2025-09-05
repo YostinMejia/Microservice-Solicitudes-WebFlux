@@ -39,6 +39,8 @@ public class RouterRest {
                                     responses = {
                                             @ApiResponse(responseCode = "201", description = "Successful save", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDto.class)))
                                             , @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MultipleErrorsResponseDto.class)))
+                                            , @ApiResponse(responseCode = "400", description = "User is not allowed to create a loan for another person", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MultipleErrorsResponseDto.class)))
+                                            ,@ApiResponse(responseCode = "403", description = "No Authorization Header", content = @Content(mediaType = "application/json"))
                                             , @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SingleErrorResponseDto.class)))
                                     },
                                     requestBody = @RequestBody(
