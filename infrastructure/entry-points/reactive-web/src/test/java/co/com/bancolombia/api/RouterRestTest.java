@@ -4,8 +4,6 @@ import co.com.bancolombia.api.application.ApplicationHandler;
 import co.com.bancolombia.api.application.config.ApplicationPath;
 import co.com.bancolombia.api.application.dto.CreateApplicationDto;
 import co.com.bancolombia.api.helper.RequestValidator;
-import co.com.bancolombia.api.mapper.ApplicationDtoMapperImpl;
-import co.com.bancolombia.model.TransactionalOperatorGateway;
 import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
 import co.com.bancolombia.model.exceptions.BusinessException;
@@ -61,9 +59,6 @@ class RouterRestTest {
 
     @MockitoBean
     private UserGateway userGateway;
-
-    @MockitoBean
-    private TransactionalOperatorGateway transactionalOperatorGateway;
 
     @MockitoBean
     private RequestValidator requestValidator; // 👈 lo mockeamos

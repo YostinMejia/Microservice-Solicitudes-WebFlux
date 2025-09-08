@@ -57,10 +57,6 @@ class UseCasesConfigTest {
             return Mockito.mock(co.com.bancolombia.model.state.gateways.StateRepository.class);
         }
 
-        @Bean
-        public co.com.bancolombia.model.TransactionalOperatorGateway transactionalOperatorGateway() {
-            return Mockito.mock(co.com.bancolombia.model.TransactionalOperatorGateway.class);
-        }
 
         @Bean
         public UserGateway userQueryGateway() {

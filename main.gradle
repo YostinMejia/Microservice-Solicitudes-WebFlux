@@ -103,7 +103,6 @@ tasks.register('jacocoMergedReport', JacocoReport) {
             }
     )
 
-
     executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
     reports {
         xml.setRequired true

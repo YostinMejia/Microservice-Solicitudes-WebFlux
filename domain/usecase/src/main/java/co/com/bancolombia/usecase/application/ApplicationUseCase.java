@@ -1,9 +1,12 @@
 package co.com.bancolombia.usecase.application;
 
 import co.com.bancolombia.model.application.Application;
+import co.com.bancolombia.model.application.ApplicationDetailsDto;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
 import co.com.bancolombia.model.auth.Role;
 import co.com.bancolombia.model.auth.gateway.AuthGateway;
+import co.com.bancolombia.model.dto.PaginationParams;
+import co.com.bancolombia.model.dto.PaginationResponseDto;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.gateways.StateRepository;
@@ -12,9 +15,12 @@ import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
 import co.com.bancolombia.model.utils.DefaultProperties;
 import co.com.bancolombia.usecase.state.StateUseCase;
+import co.com.bancolombia.usecase.state.StateUseCase;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -26,6 +32,7 @@ public class ApplicationUseCase {
     private final UserGateway userGateway;
     private final AuthGateway authGateway;
     private final StateUseCase stateUseCase;
+
 
     public Mono<Application> save(Application application, String typeLoanName, String userDocument, String userEmail, String authHeader) {
         final State initialState = new State().toBuilder().name(DefaultProperties.INITIAL_STATE_NAME.getProperty()).build();
@@ -49,11 +56,18 @@ public class ApplicationUseCase {
 
     }
 
+    public Mono<PaginationResponseDto<ApplicationDetailsDto>> findByLoanType(int limit, String authHeader) {
+        return authGateway.getRolByAuthHeaderToken(authHeader)
+                .filter(email -> !email.isEmpty() || !email.equals(Role.ADVISOR.getValue()))
+                .flatMap(x->applicationRepository.findByLoanType(limit))
+                .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.UNAUTHORIZED_GET_LOAN_TYPE)));
+    }
+
     public Mono<Application> update(UUID idApplication, String state, String authHeader) {
         return authGateway.getRolByAuthHeaderToken(authHeader)
                 .filter(email -> !email.isEmpty() || !email.equals(Role.ADVISOR.getValue()))
                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.UNAUTHORIZED_UPDATE_STATE)))
-                .then( applicationRepository.findById(idApplication))
+                .then(applicationRepository.findById(idApplication))
                 .zipWhen(application -> stateUseCase.update(application.getIdState(), state))
                 .map(tuple -> tuple.getT1().toBuilder().idState(tuple.getT2().getId()).build())
                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.APPLICATION_LOAN_NOT_FOUND)));

@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum DefaultProperties {
-    INITIAL_STATE_NAME("Invalid credentials");
+    INITIAL_STATE_NAME("Pendiente de reivisión");
 
     private final String property;
 

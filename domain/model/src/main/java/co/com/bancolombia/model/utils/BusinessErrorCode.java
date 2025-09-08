@@ -11,6 +11,7 @@ public enum BusinessErrorCode implements ResponseMessage{
     USER_NOT_FOUND("B404-00", "User does not exist"),
     UNAUTHORIZED_LOAN_CREATION("B403-00", "User is not allowed to create a loan for another person"),
     UNAUTHORIZED_UPDATE_STATE("B403-00", "User is not allowed to update an application state"),
+    UNAUTHORIZED_GET_LOAN_TYPE("B403-00", "User is not allowed to get loan types"),
     INTERNAL_SERVER_ERROR("I500-00", "Internal Server Error");
 
     private final String businessCode;

@@ -5,6 +5,7 @@ import co.com.bancolombia.api.application.dto.UpdateState;
 import co.com.bancolombia.api.helper.RequestValidator;
 import co.com.bancolombia.api.application.mapper.ApplicationDtoMapper;
 import co.com.bancolombia.api.helper.ResponseMapper;
+import co.com.bancolombia.model.dto.PaginationResponseDto;
 import co.com.bancolombia.model.utils.ResponseCode;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
 import io.swagger.v3.oas.models.headers.Header;
@@ -48,6 +49,12 @@ public class ApplicationHandler {
                 .flatMap(updateStateDto -> applicationUseCase.update(updateStateDto.idApplication(), updateStateDto.state(), authHeader))
                 .map(data -> ResponseMapper.mapBodyResponse(ResponseCode.APPLICATION_STATE_UPDATED, data))
                 .flatMap(responseDto -> ServerResponse.ok().bodyValue(responseDto));
+
+    }
+
+    public Mono<ServerResponse> listenGETFindByLoanType(ServerRequest serverRequest) {
+        String authHeader = serverRequest.headers().firstHeader(HttpHeaders.AUTHORIZATION);
+        return ServerResponse.ok().body(applicationUseCase.findByLoanType(10, authHeader), PaginationResponseDto.class);
 
     }
 }

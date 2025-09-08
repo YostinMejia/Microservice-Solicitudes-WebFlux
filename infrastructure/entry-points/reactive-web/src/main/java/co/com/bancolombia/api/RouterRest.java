@@ -20,17 +20,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
-import static org.springframework.web.reactive.function.server.RequestPredicates.PUT;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
 @RequiredArgsConstructor
 public class RouterRest {
 
-    private final ApplicationHandler applicationHandler;
     private final ApplicationPath applicationPath;
-
 
     @RouterOperations(
 
@@ -59,6 +56,8 @@ public class RouterRest {
     @Bean
     public RouterFunction<ServerResponse> routerFunction(ApplicationHandler applicationHandler) {
         return route(POST(applicationPath.getApplications()), applicationHandler::listenPOSTApplication)
-                .andRoute(PUT(applicationPath.getApplications()),applicationHandler::listenUPDATEApplicationState);
+                .andRoute(PUT(applicationPath.getApplications()),applicationHandler::listenUPDATEApplicationState)
+                .andRoute(GET(applicationPath.getApplications()),applicationHandler::listenGETFindByLoanType);
+
     }
 }

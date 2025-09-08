@@ -8,6 +8,7 @@ import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,6 +22,7 @@ import reactor.test.StepVerifier;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
@@ -39,9 +41,15 @@ class ApplicationHandlerTest {
     @Mock
     private ApplicationUseCase applicationUseCase;
 
-    private final CreateApplicationDto requestDto = new CreateApplicationDto(
-            1000, "2025-12-01", "Automóvil", "12345", "test@example.com"
-    );
+    private CreateApplicationDto requestDto;
+
+    @BeforeEach
+    void setUp() {
+
+        requestDto = new CreateApplicationDto(
+                1000, "2025-12-01", "Automóvil", "12345", "test@example.com"
+        );
+    }
 
     @Test
     void listenPOSTApplication_whenSuccess_shouldReturnCreated() {
