@@ -6,16 +6,28 @@ import co.com.bancolombia.r2dbc.helper.ReactiveAdapterOperations;
 import co.com.bancolombia.r2dbc.state.entity.StateEntity;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
 
 @Repository
 public class StateReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         State,
         StateEntity,
-    String,
+        String,
         StateReactiveRepository
-> implements StateRepository {
+        > implements StateRepository {
     public StateReactiveRepositoryAdapter(StateReactiveRepository repository, ObjectMapper mapper) {
         super(repository, mapper, d -> mapper.map(d, State.class));
     }
 
+    @Override
+    public Mono<State> update(State state) {
+        return save(state);
+    }
+
+    @Override
+    public Mono<State> findById(UUID id) {
+        return super.findById(id.toString());
+    }
 }

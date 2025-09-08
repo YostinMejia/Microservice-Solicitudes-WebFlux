@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Repository
 public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         Application,
@@ -28,6 +30,11 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
         return transactionalOperator.transactional(
                 super.save(entity)
         );
+    }
+
+    @Override
+    public Mono<Application> findById(UUID id) {
+        return super.findById(id.toString());
     }
 
 }

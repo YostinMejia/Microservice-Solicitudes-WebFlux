@@ -7,4 +7,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "routes.paths.auth-microservice.auth")
 public class AuthPath {
     private String isSameEmailAsToken;
+    private String getRoleByAuthHeaderToken;
 }

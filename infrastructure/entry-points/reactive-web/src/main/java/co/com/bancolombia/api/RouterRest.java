@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.PUT;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
@@ -57,6 +58,7 @@ public class RouterRest {
 
     @Bean
     public RouterFunction<ServerResponse> routerFunction(ApplicationHandler applicationHandler) {
-        return route(POST(applicationPath.getApplications()), applicationHandler::listenPOSTApplication);
+        return route(POST(applicationPath.getApplications()), applicationHandler::listenPOSTApplication)
+                .andRoute(PUT(applicationPath.getApplications()),applicationHandler::listenUPDATEApplicationState);
     }
 }

@@ -2,7 +2,7 @@ package co.com.bancolombia.api.authMicroservice.auth;
 
 import co.com.bancolombia.api.authMicroservice.auth.config.AuthPath;
 import co.com.bancolombia.api.authMicroservice.auth.dto.SameEmailAsTokenDto;
-import co.com.bancolombia.model.auth.AuthGateway;
+import co.com.bancolombia.model.auth.gateway.AuthGateway;
 import co.com.bancolombia.model.dto.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
@@ -30,5 +30,17 @@ public class AuthGatewayAdapter implements AuthGateway {
                 .bodyToMono(new ParameterizedTypeReference<ResponseDto<Boolean>>() {
                 })
                 .flatMap(response -> Mono.just(response.data()));
+    }
+
+    @Override
+    public Mono<String> getRolByAuthHeaderToken(String authHeader) {
+        return webClient.get()
+                .uri(authPath.getGetRoleByAuthHeaderToken())
+                .header("Authorization", authHeader)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<ResponseDto<String>>() {
+                })
+                .flatMap(response -> Mono.just(response.data()));
+
     }
 }

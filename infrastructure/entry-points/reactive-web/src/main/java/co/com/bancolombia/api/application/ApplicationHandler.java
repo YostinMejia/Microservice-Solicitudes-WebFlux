@@ -1,6 +1,7 @@
 package co.com.bancolombia.api.application;
 
 import co.com.bancolombia.api.application.dto.CreateApplicationDto;
+import co.com.bancolombia.api.application.dto.UpdateState;
 import co.com.bancolombia.api.helper.RequestValidator;
 import co.com.bancolombia.api.application.mapper.ApplicationDtoMapper;
 import co.com.bancolombia.api.helper.ResponseMapper;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -36,5 +39,15 @@ public class ApplicationHandler {
                                 .map(applicationDtoMapper::toResponseData))
                 .map(data -> ResponseMapper.mapBodyResponse(ResponseCode.APPLICATION_CREATED, data))
                 .flatMap(responseDto -> ServerResponse.status(HttpStatus.CREATED).bodyValue(responseDto));
+    }
+
+    public Mono<ServerResponse> listenUPDATEApplicationState(ServerRequest serverRequest) {
+        String authHeader = serverRequest.headers().firstHeader(HttpHeaders.AUTHORIZATION);
+        return serverRequest.bodyToMono(UpdateState.class)
+                .flatMap(requestValidator::validator)
+                .flatMap(updateStateDto -> applicationUseCase.update(updateStateDto.idApplication(), updateStateDto.state(), authHeader))
+                .map(data -> ResponseMapper.mapBodyResponse(ResponseCode.APPLICATION_STATE_UPDATED, data))
+                .flatMap(responseDto -> ServerResponse.ok().bodyValue(responseDto));
+
     }
 }
