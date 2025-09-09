@@ -2,7 +2,7 @@ package co.com.bancolombia.model.dto;
 
 import java.util.List;
 
-public record PaginationResponseDto<T>(
+public record PaginationResponse<T>(
         String message,
         String code,
         int size,

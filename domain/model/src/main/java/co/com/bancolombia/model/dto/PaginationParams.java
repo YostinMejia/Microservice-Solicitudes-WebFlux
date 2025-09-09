@@ -8,7 +8,7 @@ public record PaginationParams(
         int limit
 ) {
     public int offset() {
-        return page * limit;
+        return (page-1) * limit;
     }
     public int limit(){
         return limit;

@@ -1,10 +1,10 @@
 package co.com.bancolombia.model.application.gateways;
 
 import co.com.bancolombia.model.application.Application;
-import co.com.bancolombia.model.application.ApplicationDetailsDto;
+import co.com.bancolombia.model.application.dto.ApplicationDetails;
+import co.com.bancolombia.model.application.dto.ApplicationFilter;
 import co.com.bancolombia.model.dto.PaginationParams;
-import co.com.bancolombia.model.dto.PaginationResponseDto;
-import reactor.core.publisher.Flux;
+import co.com.bancolombia.model.dto.PaginationResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -15,6 +15,6 @@ public interface ApplicationRepository {
 
     Mono<Application> findById(UUID id);
 
-    Mono<PaginationResponseDto<ApplicationDetailsDto>> findByLoanType(int limit);
+    Mono<PaginationResponse<ApplicationDetails>> findByFilter(ApplicationFilter applicationFilter, PaginationParams paginationParams);
 
 }

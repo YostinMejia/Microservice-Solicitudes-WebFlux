@@ -1,14 +1,14 @@
-package co.com.bancolombia.model.application;
+package co.com.bancolombia.model.application.dto;
 
 import java.time.LocalDate;
 
-public record ApplicationDetailsDto(
+public record ApplicationDetails(
     String email,
     Long amount,
     LocalDate term,
     String loanType,
     Integer interestRate,
     String state,
-    Long applicationMonthPayment
+    Float applicationMonthPayment
 ) {
 }

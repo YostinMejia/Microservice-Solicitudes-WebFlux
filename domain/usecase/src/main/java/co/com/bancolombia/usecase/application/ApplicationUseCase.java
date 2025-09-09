@@ -1,12 +1,13 @@
 package co.com.bancolombia.usecase.application;
 
 import co.com.bancolombia.model.application.Application;
-import co.com.bancolombia.model.application.ApplicationDetailsDto;
+import co.com.bancolombia.model.application.dto.ApplicationDetails;
+import co.com.bancolombia.model.application.dto.ApplicationFilter;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
 import co.com.bancolombia.model.auth.Role;
 import co.com.bancolombia.model.auth.gateway.AuthGateway;
 import co.com.bancolombia.model.dto.PaginationParams;
-import co.com.bancolombia.model.dto.PaginationResponseDto;
+import co.com.bancolombia.model.dto.PaginationResponse;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.gateways.StateRepository;
@@ -15,12 +16,9 @@ import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
 import co.com.bancolombia.model.utils.DefaultProperties;
 import co.com.bancolombia.usecase.state.StateUseCase;
-import co.com.bancolombia.usecase.state.StateUseCase;
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.UUID;
 
 
@@ -56,10 +54,10 @@ public class ApplicationUseCase {
 
     }
 
-    public Mono<PaginationResponseDto<ApplicationDetailsDto>> findByLoanType(int limit, String authHeader) {
+    public Mono<PaginationResponse<ApplicationDetails>> findByFilter(ApplicationFilter applicationFilter, PaginationParams paginationParams, String authHeader) {
         return authGateway.getRolByAuthHeaderToken(authHeader)
                 .filter(email -> !email.isEmpty() || !email.equals(Role.ADVISOR.getValue()))
-                .flatMap(x->applicationRepository.findByLoanType(limit))
+                .flatMap(x -> applicationRepository.findByFilter(applicationFilter, paginationParams))
                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.UNAUTHORIZED_GET_LOAN_TYPE)));
     }
 

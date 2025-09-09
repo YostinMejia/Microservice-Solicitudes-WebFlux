@@ -3,13 +3,17 @@ package co.com.bancolombia.api.authMicroservice.auth;
 import co.com.bancolombia.api.authMicroservice.auth.config.AuthPath;
 import co.com.bancolombia.api.authMicroservice.auth.dto.SameEmailAsTokenDto;
 import co.com.bancolombia.model.auth.gateway.AuthGateway;
-import co.com.bancolombia.model.dto.ResponseDto;
+import co.com.bancolombia.model.dto.Response;
+import co.com.bancolombia.model.exceptions.BusinessException;
+import co.com.bancolombia.model.utils.BusinessErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -27,7 +31,16 @@ public class AuthGatewayAdapter implements AuthGateway {
                 .bodyValue(new SameEmailAsTokenDto(email))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ResponseDto<Boolean>>() {
+                .onStatus(
+                        status -> !status.is2xxSuccessful(),
+                        response -> response.bodyToMono(Map.class)
+                                .flatMap(body -> {
+                                    String message = (String) body.get("message");
+                                    String code = (String) body.get("code");
+                                    return Mono.error(new BusinessException(message, code));
+                                })
+                )
+                .bodyToMono(new ParameterizedTypeReference<Response<Boolean>>() {
                 })
                 .flatMap(response -> Mono.just(response.data()));
     }
@@ -38,7 +51,16 @@ public class AuthGatewayAdapter implements AuthGateway {
                 .uri(authPath.getGetRoleByAuthHeaderToken())
                 .header("Authorization", authHeader)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ResponseDto<String>>() {
+                .onStatus(
+                        status -> !status.is2xxSuccessful(),
+                        response -> response.bodyToMono(Map.class)
+                                .flatMap(body -> {
+                                    String message = (String) body.get("message");
+                                    String code = (String) body.get("code");
+                                    return Mono.error(new BusinessException(message, code));
+                                })
+                )
+                .bodyToMono(new ParameterizedTypeReference<Response<String>>() {
                 })
                 .flatMap(response -> Mono.just(response.data()));
 

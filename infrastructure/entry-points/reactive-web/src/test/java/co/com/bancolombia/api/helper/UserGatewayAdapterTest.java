@@ -2,7 +2,7 @@ package co.com.bancolombia.api.helper;
 
 import co.com.bancolombia.api.authMicroservice.user.UserGatewayAdapter;
 import co.com.bancolombia.api.authMicroservice.user.config.UserPath;
-import co.com.bancolombia.model.dto.ResponseDto;
+import co.com.bancolombia.model.dto.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,13 +49,13 @@ class UserGatewayAdapterTest {
     void shouldReturnTrueWhenUserExists() {
         // Arrange
         String document = "123456789";
-        ResponseDto<Boolean> responseDto = new ResponseDto<>(null, null, true);
+        Response<Boolean> response = new Response<>(null, null, true);
 
         when(userPath.getExistsByDocument()).thenReturn("/api/v1/usuarios/{document}");
 
         // Simulate WebClient returning a successful response.
         when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class)))
-                .thenReturn(Mono.just(responseDto));
+                .thenReturn(Mono.just(response));
 
         // Act
         Mono<Boolean> result = userGatewayAdapter.existByDocumentAndEmail(document, );
@@ -70,13 +70,13 @@ class UserGatewayAdapterTest {
     void shouldReturnFalseWhenUserDoesNotExist() {
         // Arrange
         String document = "non-existent-user";
-        ResponseDto<Boolean> responseDto = new ResponseDto<>(null, null, false);
+        Response<Boolean> response = new Response<>(null, null, false);
 
         when(userPath.getExistsByDocument()).thenReturn("/api/v1/usuarios/{document}");
 
         // Simulate WebClient returning a response with false data.
         when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class)))
-                .thenReturn(Mono.just(responseDto));
+                .thenReturn(Mono.just(response));
 
         // Act
         Mono<Boolean> result = userGatewayAdapter.existByDocumentAndEmail(document, );
