@@ -77,10 +77,6 @@ class ApplicationUseCaseTest {
     private final String userEmail = "test@mail.com";
     private final String userDocument = "123456789";
 
-    @BeforeEach
-    void setup() {
-    }
-
     @Test
     void givenUserExistsAndValidData_whenSaveApplication_thenShouldReturnApplication() {
         // Arrange
