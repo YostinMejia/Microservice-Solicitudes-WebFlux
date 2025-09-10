@@ -1,10 +1,13 @@
 package co.com.bancolombia.usecase.application;
 
 import co.com.bancolombia.model.application.Application;
+import co.com.bancolombia.model.application.dto.ApplicationDetails;
+import co.com.bancolombia.model.application.dto.ApplicationFilter;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
 import co.com.bancolombia.model.auth.Role;
 import co.com.bancolombia.model.auth.gateway.AuthGateway;
-
+import co.com.bancolombia.model.dto.PaginationParams;
+import co.com.bancolombia.model.dto.PaginationResponse;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.gateways.StateRepository;
@@ -62,7 +65,7 @@ public class ApplicationUseCase {
         return authGateway.getRolByAuthHeaderToken(authHeader)
                 .filter(email -> !email.isEmpty() || !email.equals(Role.ADVISOR.getValue()))
                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.UNAUTHORIZED_UPDATE_STATE)))
-                .then(Mono.defer(() -> applicationRepository.findById(idApplication)))
+                .then(applicationRepository.findById(idApplication))
                 .zipWhen(application -> stateUseCase.update(application.getIdState(), state))
                 .map(tuple -> tuple.getT1().toBuilder().idState(tuple.getT2().getId()).build())
                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.APPLICATION_LOAN_NOT_FOUND)));
