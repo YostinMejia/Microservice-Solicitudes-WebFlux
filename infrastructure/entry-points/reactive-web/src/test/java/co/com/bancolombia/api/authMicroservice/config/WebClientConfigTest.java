@@ -1,4 +1,7 @@
-package co.com.bancolombia.api.config;
+package co.com.bancolombia.api.authMicroservice.config;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 
 import co.com.bancolombia.api.application.config.ApplicationPath;
 
@@ -18,13 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
         ApplicationPath.class
 })
 @TestPropertySource(properties = {
-        "routes.paths.applications.applications=/api/v1/solicitudes"
+        "routes.paths.auth-microservice.baseUrl=http://localhost:8080"
 })
 @WebFluxTest
 class WebClientConfigTest {
 
     @Mock
-    private UserPath userPath;
+    private AuthMicroServicePath authMicroServicePath;
 
     @InjectMocks
     private WebClientConfig webClientConfig;

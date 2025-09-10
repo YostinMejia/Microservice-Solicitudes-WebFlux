@@ -2,7 +2,8 @@ package co.com.bancolombia.api.authMicroservice.user;
 
 import co.com.bancolombia.api.authMicroservice.user.config.UserPath;
 import co.com.bancolombia.api.authMicroservice.user.dto.ExistsByDocumentAndEmailDto;
-import co.com.bancolombia.model.dto.ResponseDto;
+import co.com.bancolombia.model.dto.Response;
+import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.user.UserGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
@@ -10,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -26,7 +29,16 @@ public class UserGatewayAdapter implements UserGateway {
                 .bodyValue(new ExistsByDocumentAndEmailDto(document, email))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ResponseDto<Boolean>>() {
+                .onStatus(
+                        status -> !status.is2xxSuccessful(),
+                        response -> response.bodyToMono(Map.class)
+                                .flatMap(body -> {
+                                    String message = (String) body.get("message");
+                                    String code = (String) body.get("code");
+                                    return Mono.error(new BusinessException(message, code));
+                                })
+                )
+                .bodyToMono(new ParameterizedTypeReference<Response<Boolean>>() {
                 })
                 .flatMap(response -> Mono.just(response.data()));
     }

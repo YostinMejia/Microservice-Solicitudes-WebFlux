@@ -1,5 +1,6 @@
 package co.com.bancolombia.config;
 
+import co.com.bancolombia.model.auth.gateway.AuthGateway;
 import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
 import org.junit.jupiter.api.Test;
@@ -58,9 +59,10 @@ class UseCasesConfigTest {
         }
 
         @Bean
-        public co.com.bancolombia.model.TransactionalOperatorGateway transactionalOperatorGateway() {
-            return Mockito.mock(co.com.bancolombia.model.TransactionalOperatorGateway.class);
+        public AuthGateway authGateway() {
+            return Mockito.mock(AuthGateway.class);
         }
+
 
         @Bean
         public UserGateway userQueryGateway() {

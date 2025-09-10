@@ -2,12 +2,13 @@ package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.application.ApplicationHandler;
 import co.com.bancolombia.api.application.config.ApplicationPath;
+import co.com.bancolombia.api.application.dto.ApplicationResponseDataDto;
 import co.com.bancolombia.api.application.dto.CreateApplicationDto;
+import co.com.bancolombia.api.application.mapper.ApplicationDtoMapper;
 import co.com.bancolombia.api.helper.RequestValidator;
-import co.com.bancolombia.api.mapper.ApplicationDtoMapperImpl;
-import co.com.bancolombia.model.TransactionalOperatorGateway;
 import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
+import co.com.bancolombia.model.auth.gateway.AuthGateway;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.gateways.StateRepository;
@@ -16,6 +17,8 @@ import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
 import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
+import co.com.bancolombia.usecase.state.StateUseCase;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -25,6 +28,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,9 +41,9 @@ import static org.mockito.BDDMockito.given;
         ApplicationHandler.class,
         ApplicationPath.class,
         ApplicationUseCase.class,
-        ApplicationDtoMapperImpl.class,
         RequestValidator.class,
-        GlobalErrorWebExceptionHandler.class
+        GlobalErrorWebExceptionHandler.class,
+        StateUseCase.class,
 })
 @TestPropertySource(properties = {
         "routes.paths.applications.applications=/api/v1/solicitudes"
@@ -49,7 +53,9 @@ class RouterRestTest {
     @Autowired
     private WebTestClient webTestClient;
 
-    // Mock external dependencies
+    @Autowired
+    private ApplicationPath applicationPath;
+
     @MockitoBean
     private ApplicationRepository applicationRepository;
 
@@ -63,30 +69,58 @@ class RouterRestTest {
     private UserGateway userGateway;
 
     @MockitoBean
-    private TransactionalOperatorGateway transactionalOperatorGateway;
+    private AuthGateway authGateway;
 
     @MockitoBean
-    private RequestValidator requestValidator; // 👈 lo mockeamos
+    private ApplicationDtoMapper applicationDtoMapper;
 
-    private final UUID typeLoanId = UUID.randomUUID();
-    private final UUID stateId = UUID.randomUUID();
-    private final CreateApplicationDto requestDto = new CreateApplicationDto(
-            1000, "2025-12-01", "Automóvil", "12345", "test@example.com"
-    );
+    @MockitoBean
+    private RequestValidator requestValidator;
+    private String authHeader;
+    private UUID typeLoanId;
+    private UUID stateId;
+    private UUID appId;
+    private CreateApplicationDto requestDto;
+
+    @BeforeEach
+    void setUp() {
+        authHeader = "Bearer token";
+        typeLoanId = UUID.randomUUID();
+        stateId = UUID.randomUUID();
+        appId = UUID.randomUUID();
+
+        requestDto = new CreateApplicationDto(
+                1000, "2025-12-01", "Automóvil", "12345", "test@example.com"
+        );
+
+    }
+
 
     @Test
     void whenSuccess_shouldReturnCreatedAndHitRepository() {
-        // Arrange
+        Application fakeApplication = Application.builder()
+                .id(appId)
+                .amount(requestDto.amount())
+                .term(LocalDate.parse(requestDto.term()))
+                .email(requestDto.email())
+                .document(requestDto.document())
+                .idState(stateId)
+                .idTypeLoan(typeLoanId)
+                .build();
+        ApplicationResponseDataDto applicationResponseDataDto= new ApplicationResponseDataDto(fakeApplication.getAmount(),fakeApplication.getTerm().toString(),fakeApplication.getDocument(),fakeApplication.getEmail(),fakeApplication.getIdState(),fakeApplication.getIdTypeLoan());
+
         given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
-        given(userGateway.existByDocumentAndEmail(any(), )).willReturn(Mono.just(true));
+        given(authGateway.isSameEmailAsToken(any(), any())).willReturn(Mono.just(true));
+        given(userGateway.existByDocumentAndEmail(any(), any(), any())).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(any())).willReturn(Mono.just(TypeLoan.builder().id(typeLoanId).build()));
         given(stateRepository.save(any())).willReturn(Mono.just(State.builder().id(stateId).build()));
         given(applicationRepository.save(any())).willReturn(Mono.just(Application.builder().id(UUID.randomUUID()).build()));
-        given(transactionalOperatorGateway.execute(any(Mono.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(applicationDtoMapper.toApplication(any(CreateApplicationDto.class))).willReturn(fakeApplication);
+        given(applicationDtoMapper.toResponseData(any(Application.class))).willReturn(applicationResponseDataDto);
 
-        // Act & Assert
         webTestClient.post()
-                .uri("/api/v1/solicitudes")
+                .uri(applicationPath.getApplications())
+                .header("Authorization", authHeader)
                 .bodyValue(requestDto)
                 .exchange()
                 .expectStatus().isCreated();
@@ -107,7 +141,7 @@ class RouterRestTest {
 
         // Act & Assert
         webTestClient.post()
-                .uri("/api/v1/solicitudes")
+                .uri(applicationPath.getApplications())
                 .bodyValue(invalidDto)
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -120,12 +154,11 @@ class RouterRestTest {
     void whenUserDoesNotExist_shouldReturnBadRequest() {
         // Arrange
         given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
-        given(userGateway.existByDocumentAndEmail(any(), )).willReturn(Mono.just(false));
-        given(transactionalOperatorGateway.execute(any(Mono.class))).willAnswer(invocation -> invocation.getArgument(0));
-
+        given(authGateway.isSameEmailAsToken(any(), any())).willReturn(Mono.just(true));
+        given(userGateway.existByDocumentAndEmail(any(), any(), any())).willReturn(Mono.just(false));
         // Act & Assert
         webTestClient.post()
-                .uri("/api/v1/solicitudes")
+                .uri(applicationPath.getApplications())
                 .bodyValue(requestDto)
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -138,13 +171,13 @@ class RouterRestTest {
     void whenTypeLoanDoesNotExist_shouldReturnBadRequest() {
         // Arrange
         given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
-        given(userGateway.existByDocumentAndEmail(any(), )).willReturn(Mono.just(true));
+        given(authGateway.isSameEmailAsToken(any(), any())).willReturn(Mono.just(true));
+        given(userGateway.existByDocumentAndEmail(any(), any(), any())).willReturn(Mono.just(true));
         given(typeLoanRepository.findByName(any())).willReturn(Mono.empty());
-        given(transactionalOperatorGateway.execute(any(Mono.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // Act & Assert
         webTestClient.post()
-                .uri("/api/v1/solicitudes")
+                .uri(applicationPath.getApplications())
                 .bodyValue(requestDto)
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -168,7 +201,7 @@ class RouterRestTest {
 
         // Act & Assert
         webTestClient.post()
-                .uri("/api/v1/solicitudes")
+                .uri(applicationPath.getApplications())
                 .bodyValue(invalidDto)
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -180,5 +213,6 @@ class RouterRestTest {
                 .jsonPath("$.message").isEqualTo(BusinessErrorCode.VALIDATION_FAILED.getMessage())
                 .jsonPath("$.code").isEqualTo(BusinessErrorCode.VALIDATION_FAILED.getBusinessCode());
     }
+
 
 }
