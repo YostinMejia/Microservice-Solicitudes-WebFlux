@@ -15,11 +15,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,6 +28,7 @@ class UserGatewayAdapterTest {
     @InjectMocks
     private UserGatewayAdapter userGatewayAdapter;
 
+    // Use @Mock for all dependencies for a consistent unit testing approach.
     @Mock
     private WebClient webClient;
 

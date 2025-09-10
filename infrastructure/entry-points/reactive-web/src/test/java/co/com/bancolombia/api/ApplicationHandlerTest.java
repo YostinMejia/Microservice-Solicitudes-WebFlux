@@ -6,24 +6,35 @@ import co.com.bancolombia.api.application.dto.CreateApplicationDto;
 import co.com.bancolombia.api.helper.RequestValidator;
 import co.com.bancolombia.api.application.mapper.ApplicationDtoMapper;
 import co.com.bancolombia.model.application.Application;
+import co.com.bancolombia.model.application.dto.ApplicationDetails;
+import co.com.bancolombia.model.application.dto.ApplicationFilter;
+import co.com.bancolombia.model.dto.PaginationParams;
+import co.com.bancolombia.model.dto.PaginationResponse;
 import co.com.bancolombia.model.exceptions.BusinessException;
+import co.com.bancolombia.model.state.States;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
+import co.com.bancolombia.model.utils.ResponseCode;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.reactive.function.server.MockServerRequest;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
@@ -81,7 +92,10 @@ class ApplicationHandlerTest {
         given(applicationUseCase.save(any(Application.class), any(String.class), any(String.class), any(String.class), any()))
                 .willReturn(Mono.error(new BusinessException(BusinessErrorCode.USER_NOT_FOUND)));
 
+
         MockServerRequest serverRequest = MockServerRequest.builder()
+                .method(HttpMethod.POST)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer token123")
                 .body(Mono.just(requestDto));
 
         // Act & Assert
@@ -129,5 +143,68 @@ class ApplicationHandlerTest {
                 .expectErrorMatches(throwable -> throwable instanceof BusinessException
                         && ((BusinessException) throwable).getCode().equals(BusinessErrorCode.TYPE_LOAN_NOT_FOUND.getBusinessCode()))
                 .verify();
+    }
+
+//    @Test
+//    void listenGETFindByFilter_whenNoPaginationParamsGiven_shouldCreateDefaultOnes(){
+//        given(applicationUseCase.findByFilter(any(ApplicationFilter.class),any(PaginationParams.class),any(String.class))).willReturn()
+//        MockServerRequest serverRequest = MockServerRequest.builder()
+//                .method(HttpMethod.GET)
+//                .uri(URI.create("/applications?limit=5&page=2&states=APPROVED,PENDING"))
+//                .header(HttpHeaders.AUTHORIZATION, "Bearer token123")
+//                .build();
+//
+//
+//    }
+
+    @Test
+    void listenGETFindByFilter_whenDataMatch_shouldReturnItPaginated() {
+        final PaginationResponse<ApplicationDetails> fakeApprovedApplications = getDetailsPaginationResponse();
+
+
+        given(applicationUseCase.findByFilter(any(ApplicationFilter.class), any(PaginationParams.class), any(String.class))).willReturn(Mono.just(fakeApprovedApplications));
+
+        MockServerRequest serverRequest = MockServerRequest.builder()
+                .method(HttpMethod.GET)
+                .uri(URI.create("/applications?limit=5&page=2&states=APPROVED,PENDING"))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer token123")
+                .build();
+
+        StepVerifier.create(applicationHandler.listenGETFindByFilter(serverRequest))
+                .assertNext(serverResponse -> {
+                    assertThat(serverResponse.statusCode().value()).isEqualTo(200);
+                })
+                .verifyComplete();
+    }
+
+    @NotNull
+    private static PaginationResponse<ApplicationDetails> getDetailsPaginationResponse() {
+        List<ApplicationDetails> responses = List.of(new ApplicationDetails(
+                        "juan.perez@mail.com",
+                        5000L,
+                        LocalDate.of(2025, 12, 1),
+                        "Libre Inversión",
+                        15,
+                        States.APPROVED.getValue(),
+                        450.0f
+                ),
+
+                new ApplicationDetails(
+                        "maria.lopez@mail.com",
+                        12000L,
+                        LocalDate.of(2026, 6, 15),
+                        "Vivienda",
+                        12,
+                        States.APPROVED.getValue(),
+                        1100.0f
+                ));
+
+        return new PaginationResponse<>(
+                ResponseCode.STATES_PAGINATED.getMessage(),
+                ResponseCode.STATES_PAGINATED.getBusinessCode(),
+                10,
+                responses.size(),
+                responses
+        );
     }
 }

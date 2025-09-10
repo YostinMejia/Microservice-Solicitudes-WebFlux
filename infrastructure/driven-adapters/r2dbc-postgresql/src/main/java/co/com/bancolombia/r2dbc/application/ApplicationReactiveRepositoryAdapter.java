@@ -18,7 +18,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -46,12 +45,6 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
                 super.save(entity)
         );
     }
-
-    @Override
-    public Mono<Application> findById(UUID id) {
-        return super.findById(id.toString());
-    }
-
 
     @Override
     public Mono<PaginationResponse<ApplicationDetails>> findByFilter(ApplicationFilter applicationFilter, PaginationParams paginationParams) {
@@ -123,6 +116,11 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
         filter.append(String.format(" OR t.validacion_automatica IS %s", applicationFilter.manualCheck().isPresent() ? "TRUE" : "FALSE"));
         return new String(filter);
 
+    }
+
+    @Override
+    public Mono<Application> findById(UUID id) {
+        return super.findById(id.toString());
     }
 
 

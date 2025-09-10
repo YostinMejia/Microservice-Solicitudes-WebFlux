@@ -28,6 +28,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -43,7 +44,7 @@ import static org.mockito.BDDMockito.given;
         ApplicationUseCase.class,
         RequestValidator.class,
         GlobalErrorWebExceptionHandler.class,
-        StateUseCase.class,
+        StateUseCase.class
 })
 @TestPropertySource(properties = {
         "routes.paths.applications.applications=/api/v1/solicitudes"
@@ -55,7 +56,6 @@ class RouterRestTest {
 
     @Autowired
     private ApplicationPath applicationPath;
-
     @MockitoBean
     private ApplicationRepository applicationRepository;
 
@@ -69,13 +69,14 @@ class RouterRestTest {
     private UserGateway userGateway;
 
     @MockitoBean
+    private RequestValidator requestValidator;
+
+    @MockitoBean
     private AuthGateway authGateway;
 
     @MockitoBean
     private ApplicationDtoMapper applicationDtoMapper;
 
-    @MockitoBean
-    private RequestValidator requestValidator;
     private String authHeader;
     private UUID typeLoanId;
     private UUID stateId;
@@ -94,7 +95,6 @@ class RouterRestTest {
         );
 
     }
-
 
     @Test
     void whenSuccess_shouldReturnCreatedAndHitRepository() {
@@ -126,6 +126,7 @@ class RouterRestTest {
                 .expectStatus().isCreated();
     }
 
+
     @Test
     void whenValidationFails_shouldReturnBadRequest() {
         // Arrange
@@ -156,6 +157,7 @@ class RouterRestTest {
         given(requestValidator.validator(any())).willReturn(Mono.just(requestDto));
         given(authGateway.isSameEmailAsToken(any(), any())).willReturn(Mono.just(true));
         given(userGateway.existByDocumentAndEmail(any(), any(), any())).willReturn(Mono.just(false));
+
         // Act & Assert
         webTestClient.post()
                 .uri(applicationPath.getApplications())
@@ -213,6 +215,5 @@ class RouterRestTest {
                 .jsonPath("$.message").isEqualTo(BusinessErrorCode.VALIDATION_FAILED.getMessage())
                 .jsonPath("$.code").isEqualTo(BusinessErrorCode.VALIDATION_FAILED.getBusinessCode());
     }
-
 
 }

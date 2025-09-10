@@ -8,5 +8,6 @@ dependencies {
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
     implementation "org.springdoc:springdoc-openapi-starter-webflux-ui:${openapiVersion}"
+    testImplementation "com.squareup.okhttp3:mockwebserver:${okhttp3Version}"
 
 }

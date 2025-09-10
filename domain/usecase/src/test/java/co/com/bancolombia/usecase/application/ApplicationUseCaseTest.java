@@ -8,8 +8,10 @@ import co.com.bancolombia.model.auth.Role;
 import co.com.bancolombia.model.auth.gateway.AuthGateway;
 import co.com.bancolombia.model.dto.PaginationParams;
 import co.com.bancolombia.model.dto.PaginationResponse;
+import co.com.bancolombia.model.auth.Role;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
+import co.com.bancolombia.model.state.States;
 import co.com.bancolombia.model.state.States;
 import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.TypeLoan;
@@ -55,10 +57,10 @@ class ApplicationUseCaseTest {
     private UserGateway userGateway;
 
     @Mock
-    private AuthGateway authGateway;
+    private StateUseCase stateUseCase;
 
     @Mock
-    private StateUseCase stateUseCase;
+    private AuthGateway authGateway;
 
     private final UUID typeLoanId = UUID.randomUUID();
     private final UUID stateId = UUID.randomUUID();
@@ -110,7 +112,6 @@ class ApplicationUseCaseTest {
         verify(stateRepository).save(any(State.class));
         verify(applicationRepository).save(any(Application.class));
     }
-
     @Test
     void givenUserDoesNotExist_whenSaveApplication_thenShouldReturnBusinessException() {
         // Arrange

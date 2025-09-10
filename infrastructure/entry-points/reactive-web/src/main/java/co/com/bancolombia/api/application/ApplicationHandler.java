@@ -45,16 +45,6 @@ public class ApplicationHandler {
                 .flatMap(responseDto -> ServerResponse.status(HttpStatus.CREATED).bodyValue(responseDto));
     }
 
-    public Mono<ServerResponse> listenUPDATEApplicationState(ServerRequest serverRequest) {
-        String authHeader = serverRequest.headers().firstHeader(HttpHeaders.AUTHORIZATION);
-        return serverRequest.bodyToMono(UpdateState.class)
-                .flatMap(requestValidator::validator)
-                .flatMap(updateStateDto -> applicationUseCase.update(updateStateDto.idApplication(), updateStateDto.state(), authHeader))
-                .map(data -> ResponseMapper.mapBodyResponse(ResponseCode.APPLICATION_STATE_UPDATED, data))
-                .flatMap(responseDto -> ServerResponse.ok().bodyValue(responseDto));
-
-    }
-
     public Mono<ServerResponse> listenGETFindByFilter(ServerRequest serverRequest) {
         String authHeader = serverRequest.headers().firstHeader(HttpHeaders.AUTHORIZATION);
         int limit = serverRequest.queryParam("limit").isPresent() ? Integer.parseInt(serverRequest.queryParam("limit").get()) : 10;
@@ -62,6 +52,16 @@ public class ApplicationHandler {
         Optional<List<String>> states = serverRequest.queryParam("states").map(s -> Arrays.asList(s.split(",")));
         Optional<Boolean> manualCheck = serverRequest.queryParam("manualCheck").map(Boolean::parseBoolean);
         return ServerResponse.ok().body(applicationUseCase.findByFilter(new ApplicationFilter(states,manualCheck), new PaginationParams(limit, page), authHeader), PaginationResponse.class);
+
+    }
+
+    public Mono<ServerResponse> listenUPDATEApplicationState(ServerRequest serverRequest) {
+        String authHeader = serverRequest.headers().firstHeader(HttpHeaders.AUTHORIZATION);
+        return serverRequest.bodyToMono(UpdateState.class)
+                .flatMap(requestValidator::validator)
+                .flatMap(updateStateDto -> applicationUseCase.update(updateStateDto.idApplication(), updateStateDto.state(), authHeader))
+                .map(data -> ResponseMapper.mapBodyResponse(ResponseCode.APPLICATION_STATE_UPDATED, data))
+                .flatMap(responseDto -> ServerResponse.ok().bodyValue(responseDto));
 
     }
 }

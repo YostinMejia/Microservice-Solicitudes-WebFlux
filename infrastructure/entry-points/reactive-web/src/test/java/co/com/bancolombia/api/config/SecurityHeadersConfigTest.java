@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 class SecurityHeadersConfigTest {
 
     @Test
-    void filter_withAuthHeader_addsSecurityHeaders() {
+    void securityHeadersFilterAddsCorrectHeaders() {
         // Arrange
         SecurityHeadersConfig filter = new SecurityHeadersConfig();
         MockServerHttpRequest request = MockServerHttpRequest.get("/test")
