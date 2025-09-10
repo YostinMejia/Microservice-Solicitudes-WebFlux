@@ -14,13 +14,15 @@ import static org.mockito.Mockito.when;
 class SecurityHeadersConfigTest {
 
     @Test
-    void securityHeadersFilterAddsCorrectHeaders() {
+    void filter_withAuthHeader_addsSecurityHeaders() {
         // Arrange
         SecurityHeadersConfig filter = new SecurityHeadersConfig();
-        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/test"));
-        WebFilterChain chain = mock(WebFilterChain.class);
+        MockServerHttpRequest request = MockServerHttpRequest.get("/test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer token")
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        // Mock the filter chain to return a completed Mono
+        WebFilterChain chain = mock(WebFilterChain.class);
         when(chain.filter(exchange)).thenReturn(Mono.empty());
 
         // Act
@@ -36,5 +38,20 @@ class SecurityHeadersConfigTest {
         assertEquals("no-store", headers.getFirst("Cache-Control"));
         assertEquals("no-cache", headers.getFirst("Pragma"));
         assertEquals("strict-origin-when-cross-origin", headers.getFirst("Referrer-Policy"));
+    }
+
+    @Test
+    void filter_withoutAuthHeader_returnsForbidden() {
+        // Arrange
+        SecurityHeadersConfig filter = new SecurityHeadersConfig();
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/test"));
+        WebFilterChain chain = mock(WebFilterChain.class);
+
+        // Act
+        Mono<Void> filterMono = filter.filter(exchange, chain);
+        filterMono.block();
+
+        // Assert
+        assertEquals(403, exchange.getResponse().getStatusCode().value());
     }
 }

@@ -61,13 +61,4 @@ public class ApplicationUseCase {
                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.UNAUTHORIZED_GET_LOAN_TYPE)));
     }
 
-    public Mono<Application> update(UUID idApplication, String state, String authHeader) {
-        return authGateway.getRolByAuthHeaderToken(authHeader)
-                .filter(email -> !email.isEmpty() || !email.equals(Role.ADVISOR.getValue()))
-                .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.UNAUTHORIZED_UPDATE_STATE)))
-                .then(applicationRepository.findById(idApplication))
-                .zipWhen(application -> stateUseCase.update(application.getIdState(), state))
-                .map(tuple -> tuple.getT1().toBuilder().idState(tuple.getT2().getId()).build())
-                .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.APPLICATION_LOAN_NOT_FOUND)));
-    }
 }

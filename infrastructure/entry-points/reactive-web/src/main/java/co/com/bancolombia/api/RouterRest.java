@@ -69,7 +69,6 @@ public class RouterRest {
     @Bean
     public RouterFunction<ServerResponse> routerFunction(ApplicationHandler applicationHandler) {
         return route(POST(applicationPath.getApplications()), applicationHandler::listenPOSTApplication)
-                .andRoute(PUT(applicationPath.getApplications()),applicationHandler::listenUPDATEApplicationState)
                 .andRoute(GET(applicationPath.getApplications()),applicationHandler::listenGETFindByFilter);
 
     }

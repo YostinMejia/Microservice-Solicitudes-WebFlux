@@ -2,8 +2,8 @@ package co.com.bancolombia.api.config;
 
 import co.com.bancolombia.api.application.config.ApplicationPath;
 
+import co.com.bancolombia.api.authMicroservice.config.AuthMicroServicePath;
 import co.com.bancolombia.api.authMicroservice.config.WebClientConfig;
-import co.com.bancolombia.api.authMicroservice.user.config.UserPath;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class WebClientConfigTest {
 
     @Mock
-    private UserPath userPath;
+    private AuthMicroServicePath authMicroServicePath;
 
     @InjectMocks
     private WebClientConfig webClientConfig;

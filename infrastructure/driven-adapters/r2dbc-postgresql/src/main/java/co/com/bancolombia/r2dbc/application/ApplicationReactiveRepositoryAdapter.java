@@ -48,12 +48,6 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
     }
 
     @Override
-    public Mono<Application> findById(UUID id) {
-        return super.findById(id.toString());
-    }
-
-
-    @Override
     public Mono<PaginationResponse<ApplicationDetails>> findByFilter(ApplicationFilter applicationFilter, PaginationParams paginationParams) {
         String baseQuery = """ 
                 FROM solicitud s

@@ -1,6 +1,7 @@
 package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.application.ApplicationHandler;
+import co.com.bancolombia.api.application.dto.ApplicationResponseDataDto;
 import co.com.bancolombia.api.application.dto.CreateApplicationDto;
 import co.com.bancolombia.api.helper.RequestValidator;
 import co.com.bancolombia.api.application.mapper.ApplicationDtoMapper;
@@ -56,15 +57,15 @@ class ApplicationHandlerTest {
         // Arrange
         Application domainApplication = Application.builder().amount(1000).term(LocalDate.of(2025, 12, 1)).build();
         Application savedApplication = domainApplication.toBuilder().id(UUID.randomUUID()).build();
-
+        ApplicationResponseDataDto applicationResponseDataDto = new ApplicationResponseDataDto(savedApplication.getAmount(),savedApplication.getTerm().toString(), savedApplication.getDocument(),savedApplication.getEmail(),savedApplication.getIdState(),savedApplication.getIdTypeLoan());
         // Mock dependencies to pass
         given(requestValidator.validator(any(CreateApplicationDto.class))).willReturn(Mono.just(requestDto));
         given(applicationDtoMapper.toApplication(any(CreateApplicationDto.class))).willReturn(domainApplication);
-        given(applicationUseCase.save(any(Application.class), any(String.class), any(String.class)))
-                .willReturn(Mono.just(savedApplication));
 
-        MockServerRequest serverRequest = MockServerRequest.builder()
-                .body(Mono.just(requestDto));
+        given(applicationUseCase.save(any(Application.class),any(String.class),any(String.class),any(String.class),any())).willReturn(Mono.just(savedApplication));
+        given(applicationDtoMapper.toResponseData(any(Application.class))).willReturn(applicationResponseDataDto);
+
+        MockServerRequest serverRequest = MockServerRequest.builder().body(Mono.just(requestDto));
 
         // Act & Assert
         StepVerifier.create(applicationHandler.listenPOSTApplication(serverRequest))
@@ -77,7 +78,7 @@ class ApplicationHandlerTest {
         // Arrange
         given(requestValidator.validator(any(CreateApplicationDto.class))).willReturn(Mono.just(requestDto));
         given(applicationDtoMapper.toApplication(any(CreateApplicationDto.class))).willReturn(Application.builder().build());
-        given(applicationUseCase.save(any(Application.class), any(String.class), any(String.class)))
+        given(applicationUseCase.save(any(Application.class), any(String.class), any(String.class), any(String.class), any()))
                 .willReturn(Mono.error(new BusinessException(BusinessErrorCode.USER_NOT_FOUND)));
 
         MockServerRequest serverRequest = MockServerRequest.builder()
@@ -117,7 +118,7 @@ class ApplicationHandlerTest {
         // Arrange
         given(requestValidator.validator(any(CreateApplicationDto.class))).willReturn(Mono.just(requestDto));
         given(applicationDtoMapper.toApplication(any(CreateApplicationDto.class))).willReturn(Application.builder().build());
-        given(applicationUseCase.save(any(Application.class), any(String.class), any(String.class)))
+        given(applicationUseCase.save(any(Application.class), any(String.class), any(String.class), any(String.class), any()))
                 .willReturn(Mono.error(new BusinessException(BusinessErrorCode.TYPE_LOAN_NOT_FOUND)));
 
         MockServerRequest serverRequest = MockServerRequest.builder()

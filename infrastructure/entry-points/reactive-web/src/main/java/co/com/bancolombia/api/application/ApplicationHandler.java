@@ -45,16 +45,6 @@ public class ApplicationHandler {
                 .flatMap(responseDto -> ServerResponse.status(HttpStatus.CREATED).bodyValue(responseDto));
     }
 
-    public Mono<ServerResponse> listenUPDATEApplicationState(ServerRequest serverRequest) {
-        String authHeader = serverRequest.headers().firstHeader(HttpHeaders.AUTHORIZATION);
-        return serverRequest.bodyToMono(UpdateState.class)
-                .flatMap(requestValidator::validator)
-                .flatMap(updateStateDto -> applicationUseCase.update(updateStateDto.idApplication(), updateStateDto.state(), authHeader))
-                .map(data -> ResponseMapper.mapBodyResponse(ResponseCode.APPLICATION_STATE_UPDATED, data))
-                .flatMap(responseDto -> ServerResponse.ok().bodyValue(responseDto));
-
-    }
-
     public Mono<ServerResponse> listenGETFindByFilter(ServerRequest serverRequest) {
         String authHeader = serverRequest.headers().firstHeader(HttpHeaders.AUTHORIZATION);
         int limit = serverRequest.queryParam("limit").isPresent() ? Integer.parseInt(serverRequest.queryParam("limit").get()) : 10;

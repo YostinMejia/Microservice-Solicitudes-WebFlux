@@ -10,11 +10,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,12 +24,17 @@ class UserGatewayAdapterTest {
     @InjectMocks
     private UserGatewayAdapter userGatewayAdapter;
 
-    // Use @Mock for all dependencies for a consistent unit testing approach.
     @Mock
     private WebClient webClient;
 
     @Mock
-    private WebClient.RequestHeadersUriSpec requestHeadersUriSpec;
+    private WebClient.RequestBodyUriSpec requestBodyUriSpec;
+
+    @Mock
+    private WebClient.RequestBodySpec requestBodySpec;
+
+    @Mock
+    private WebClient.RequestHeadersSpec requestHeadersSpec;
 
     @Mock
     private WebClient.ResponseSpec responseSpec;
@@ -36,29 +42,32 @@ class UserGatewayAdapterTest {
     @Mock
     private UserPath userPath;
 
+    private final String document = "123456789";
+    private final String email = "test@example.com";
+    private final String authHeader = "Bearer token";
+
     @BeforeEach
     void setup() {
-        // Mock the WebClient call chain.
-        when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(any(String.class), any(String.class))).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.accept(any())).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.retrieve()).thenReturn(responseSpec);
+        when(webClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(any(String.class))).thenReturn(requestBodySpec);
+        when(requestBodySpec.header(eq("Authorization"), eq(authHeader))).thenReturn(requestBodySpec);
+        when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.accept(MediaType.APPLICATION_JSON)).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+
+        when(userPath.getExistsByDocumentAndEmail()).thenReturn("/api/v1/usuarios/exists");
     }
 
     @Test
     void shouldReturnTrueWhenUserExists() {
         // Arrange
-        String document = "123456789";
         Response<Boolean> response = new Response<>(null, null, true);
 
-        when(userPath.getExistsByDocument()).thenReturn("/api/v1/usuarios/{document}");
-
-        // Simulate WebClient returning a successful response.
         when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class)))
                 .thenReturn(Mono.just(response));
 
         // Act
-        Mono<Boolean> result = userGatewayAdapter.existByDocumentAndEmail(document, );
+        Mono<Boolean> result = userGatewayAdapter.existByDocumentAndEmail(document, email, authHeader);
 
         // Assert
         StepVerifier.create(result)
@@ -69,17 +78,13 @@ class UserGatewayAdapterTest {
     @Test
     void shouldReturnFalseWhenUserDoesNotExist() {
         // Arrange
-        String document = "non-existent-user";
         Response<Boolean> response = new Response<>(null, null, false);
 
-        when(userPath.getExistsByDocument()).thenReturn("/api/v1/usuarios/{document}");
-
-        // Simulate WebClient returning a response with false data.
         when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class)))
                 .thenReturn(Mono.just(response));
 
         // Act
-        Mono<Boolean> result = userGatewayAdapter.existByDocumentAndEmail(document, );
+        Mono<Boolean> result = userGatewayAdapter.existByDocumentAndEmail(document, email, authHeader);
 
         // Assert
         StepVerifier.create(result)

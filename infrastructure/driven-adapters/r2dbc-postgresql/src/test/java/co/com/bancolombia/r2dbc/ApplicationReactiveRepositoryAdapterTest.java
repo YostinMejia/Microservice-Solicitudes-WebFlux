@@ -11,6 +11,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.data.domain.Example;
+import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -26,6 +28,12 @@ class ApplicationReactiveRepositoryAdapterTest {
 
     @Mock
     ApplicationReactiveRepository repository;
+
+    @Mock
+    TransactionalOperator transactionalOperator;
+
+    @Mock
+    DatabaseClient databaseClient;
 
     @Mock
     ObjectMapper mapper;
@@ -83,6 +91,7 @@ class ApplicationReactiveRepositoryAdapterTest {
         ApplicationEntity entity = new ApplicationEntity();
         Application domain = new Application();
 
+        when(transactionalOperator.transactional(any(Mono.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(mapper.map(domain, ApplicationEntity.class)).thenReturn(entity);
         when(repository.save(any(ApplicationEntity.class))).thenReturn(Mono.just(entity));
         when(mapper.map(entity, Application.class)).thenReturn(domain);
