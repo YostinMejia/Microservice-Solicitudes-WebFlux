@@ -7,6 +7,4 @@ import java.util.UUID;
 
 public interface StateRepository {
     Mono<State> save(State state);
-    Mono<State> update(State state);
-    Mono<State> findById(UUID id);
 }

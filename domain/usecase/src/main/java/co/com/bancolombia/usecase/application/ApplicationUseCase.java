@@ -15,11 +15,8 @@ import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
 import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
 import co.com.bancolombia.model.utils.DefaultProperties;
-import co.com.bancolombia.usecase.state.StateUseCase;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
-
-import java.util.UUID;
 
 
 @RequiredArgsConstructor
@@ -29,7 +26,6 @@ public class ApplicationUseCase {
     private final StateRepository stateRepository;
     private final UserGateway userGateway;
     private final AuthGateway authGateway;
-    private final StateUseCase stateUseCase;
 
 
     public Mono<Application> save(Application application, String typeLoanName, String userDocument, String userEmail, String authHeader) {

@@ -21,13 +21,4 @@ public class StateReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         super(repository, mapper, d -> mapper.map(d, State.class));
     }
 
-    @Override
-    public Mono<State> update(State state) {
-        return save(state);
-    }
-
-    @Override
-    public Mono<State> findById(UUID id) {
-        return super.findById(id.toString());
-    }
 }

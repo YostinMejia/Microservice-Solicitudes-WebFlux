@@ -15,7 +15,6 @@ import co.com.bancolombia.model.typeloan.TypeLoan;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
 import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
-import co.com.bancolombia.usecase.state.StateUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,12 +55,9 @@ class ApplicationUseCaseTest {
     @Mock
     private AuthGateway authGateway;
 
-    @Mock
-    private StateUseCase stateUseCase;
 
     private final UUID typeLoanId = UUID.randomUUID();
     private final UUID stateId = UUID.randomUUID();
-    private final UUID applicationId = UUID.randomUUID();
 
     private final Application testApplication = Application.builder()
             .amount(5000)

@@ -17,7 +17,6 @@ import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
 import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
-import co.com.bancolombia.usecase.state.StateUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +42,6 @@ import static org.mockito.BDDMockito.given;
         ApplicationUseCase.class,
         RequestValidator.class,
         GlobalErrorWebExceptionHandler.class,
-        StateUseCase.class,
 })
 @TestPropertySource(properties = {
         "routes.paths.applications.applications=/api/v1/solicitudes"
