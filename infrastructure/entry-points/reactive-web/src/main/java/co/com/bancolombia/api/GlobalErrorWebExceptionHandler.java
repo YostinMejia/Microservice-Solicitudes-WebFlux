@@ -1,7 +1,7 @@
 package co.com.bancolombia.api;
 
-import co.com.bancolombia.model.dto.MultipleErrorsResponseDto;
-import co.com.bancolombia.model.dto.SingleErrorResponseDto;
+import co.com.bancolombia.model.dto.MultipleErrorsResponse;
+import co.com.bancolombia.model.dto.SingleErrorResponse;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
 import lombok.extern.slf4j.Slf4j;
@@ -47,8 +47,8 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(
                                         bex.getErrors() != null ?
-                                                new MultipleErrorsResponseDto(bex.getErrors(), bex.getMessage(), bex.getCode())
-                                                : new SingleErrorResponseDto(bex.getMessage(), bex.getCode()));
+                                                new MultipleErrorsResponse(bex.getErrors(), bex.getMessage(), bex.getCode())
+                                                : new SingleErrorResponse(bex.getMessage(), bex.getCode()));
                     }
                     return Mono.error(error);
                 }).onErrorResume(throwable -> {
@@ -63,7 +63,7 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
                     return ServerResponse
                             .status((int) errorAttributes.getOrDefault("status", 500))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .bodyValue(new SingleErrorResponseDto(
+                            .bodyValue(new SingleErrorResponse(
                                     (String) errorAttributes.getOrDefault("error", BusinessErrorCode.INTERNAL_SERVER_ERROR.getMessage()),
                                     BusinessErrorCode.INTERNAL_SERVER_ERROR.getBusinessCode()
                             ));

@@ -5,9 +5,11 @@ import co.com.bancolombia.api.application.dto.UpdateState;
 import co.com.bancolombia.api.helper.RequestValidator;
 import co.com.bancolombia.api.application.mapper.ApplicationDtoMapper;
 import co.com.bancolombia.api.helper.ResponseMapper;
+import co.com.bancolombia.model.application.dto.ApplicationFilter;
+import co.com.bancolombia.model.dto.PaginationParams;
+import co.com.bancolombia.model.dto.PaginationResponse;
 import co.com.bancolombia.model.utils.ResponseCode;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
-import io.swagger.v3.oas.models.headers.Header;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -16,7 +18,9 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -48,6 +52,16 @@ public class ApplicationHandler {
                 .flatMap(updateStateDto -> applicationUseCase.update(updateStateDto.idApplication(), updateStateDto.state(), authHeader))
                 .map(data -> ResponseMapper.mapBodyResponse(ResponseCode.APPLICATION_STATE_UPDATED, data))
                 .flatMap(responseDto -> ServerResponse.ok().bodyValue(responseDto));
+
+    }
+
+    public Mono<ServerResponse> listenGETFindByFilter(ServerRequest serverRequest) {
+        String authHeader = serverRequest.headers().firstHeader(HttpHeaders.AUTHORIZATION);
+        int limit = serverRequest.queryParam("limit").isPresent() ? Integer.parseInt(serverRequest.queryParam("limit").get()) : 10;
+        int page = serverRequest.queryParam("page").isPresent()? Integer.parseInt(serverRequest.queryParam("page").get()) : 1;
+        Optional<List<String>> states = serverRequest.queryParam("states").map(s -> Arrays.asList(s.split(",")));
+        Optional<Boolean> manualCheck = serverRequest.queryParam("manualCheck").map(Boolean::parseBoolean);
+        return ServerResponse.ok().body(applicationUseCase.findByFilter(new ApplicationFilter(states,manualCheck), new PaginationParams(limit, page), authHeader), PaginationResponse.class);
 
     }
 }

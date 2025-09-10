@@ -32,4 +32,11 @@ public class BusinessException extends RuntimeException {
         this.code = businessErrorCode.getBusinessCode();
         this.errors = errors;
     }
+
+    public BusinessException(String message, String code) {
+        super(message);
+        this.code = code;
+        this.errors = null;
+    }
+
 }
