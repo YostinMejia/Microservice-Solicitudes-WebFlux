@@ -8,6 +8,8 @@ import co.com.bancolombia.model.dto.PaginationResponse;
 import co.com.bancolombia.model.dto.Response;
 import co.com.bancolombia.model.dto.SingleErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -35,6 +37,7 @@ public class RouterRest {
             value = {
                     @RouterOperation(method = RequestMethod.POST, path = "/api/v1/solicitudes",
                             operation = @Operation(operationId = "save", summary = "Save Application", tags = {"Application"},
+
                                     responses = {
                                             @ApiResponse(responseCode = "201", description = "Successful save", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Response.class)))
                                             , @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MultipleErrorsResponse.class)))
@@ -52,6 +55,12 @@ public class RouterRest {
 
                     @RouterOperation(method = RequestMethod.GET, path = "/api/v1/solicitudes",
                             operation = @Operation(operationId = "save", summary = "Get the application filtered", tags = {"Application"},
+                                    parameters = {
+                                            @Parameter(name = "limit", in = ParameterIn.QUERY, description = "Número máximo de registros por página", schema = @Schema(type = "integer", defaultValue = "10")),
+                                            @Parameter(name = "page", in = ParameterIn.QUERY, description = "Número de página a consultar", schema = @Schema(type = "integer", defaultValue = "1")),
+                                            @Parameter(name = "states", in = ParameterIn.QUERY, description = "Lista de estados separados por coma", schema = @Schema(type = "string", example = "rechazado,aprovado")),
+                                            @Parameter(name = "manualCheck", in = ParameterIn.QUERY, description = "Si se filtra por revisión manual", schema = @Schema(type = "boolean"))
+                                    },
                                     responses = {
                                             @ApiResponse(responseCode = "200", description = "Successful retrieve", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PaginationResponse.class)))
                                             , @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MultipleErrorsResponse.class)))
