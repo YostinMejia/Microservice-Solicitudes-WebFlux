@@ -1,0 +1,65 @@
+services:
+  postgres17_app_db:
+    image: postgres:17
+    container_name: postgres17_app_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_PORTS}
+    volumes:
+      - postgres17_db_data:/var/lib/postgresql/data
+
+  pgadmin4:
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_PORT}
+    ports:
+      - ${PGADMIN_PORTS}
+    depends_on:
+      - postgres17_app_db
+
+  auth-microservice:
+    build:
+      context: ./Autenticacion-Microservicio
+      dockerfile: /deployment/Dockerfile
+    container_name: auth-microservice
+    ports:
+      - ${AUTH_MICROSERVICE_PORTS}
+    depends_on:
+      - postgres17_app_db
+    environment:
+      - AUTH_DB_HOST=${AUTH_DB_HOST}
+      - AUTH_DB_PORT=${AUTH_DB_PORT}
+      - AUTH_DB_NAME=${AUTH_DB_NAME}
+      - AUTH_DB_SCHEMA=${AUTH_DB_SCHEMA}
+      - AUTH_DB_USER=${AUTH_DB_USER}
+      - AUTH_DB_PASSWORD=${AUTH_DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION_MINUTES=${JWT_EXPIRATION_MINUTES}
+
+  solicitudes-microservice:
+    build:
+      context: ./Solicitudes-Microservicio
+      dockerfile: /deployment/Dockerfile
+    container_name: solicitudes-microservice
+    ports:
+      - ${SOLICITUDES_MICROSERVICE_PORTS}
+    depends_on:
+      - postgres17_app_db
+    environment:
+      - SOLICITUDES_DB_HOST=${SOLICITUDES_DB_HOST}
+      - SOLICITUDES_DB_PORT=${SOLICITUDES_DB_PORT}
+      - SOLICITUDES_DB_NAME=${SOLICITUDES_DB_NAME}
+      - SOLICITUDES_DB_SCHEMA=${SOLICITUDES_DB_SCHEMA}
+      - SOLICITUDES_DB_USER=${SOLICITUDES_DB_USER}
+      - SOLICITUDES_DB_PASSWORD=${SOLICITUDES_DB_PASSWORD}
+
+volumes:
+  postgres17_db_data:
+    external: true
+    name: local-enviroment_postgres17_db_data

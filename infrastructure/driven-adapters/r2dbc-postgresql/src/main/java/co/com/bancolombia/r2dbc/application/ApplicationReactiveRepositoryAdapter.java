@@ -114,6 +114,7 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
         filter.append(String.format(" e.nombre IN (%s)", states));
 
         filter.append(String.format(" OR t.validacion_automatica IS %s", applicationFilter.manualCheck().isPresent() ? "TRUE" : "FALSE"));
+
         return new String(filter);
 
     }

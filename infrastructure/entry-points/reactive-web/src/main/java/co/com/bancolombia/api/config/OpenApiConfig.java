@@ -13,7 +13,7 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Microservice Authentication ")
+                        .title("Microservice Solicitudes")
                         .version("1.0.0")
                         .description("API for user's authentication using WebFlux")
                         .contact(new Contact()
