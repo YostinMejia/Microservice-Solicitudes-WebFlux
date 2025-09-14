@@ -9,7 +9,7 @@ buildscript {
         mapstructVersion = '1.6.3'
         openapiVersion = "2.6.0"
         okhttp3Version = "4.12.0"
-
+        awsSdkBomVersion = "2.33.8"
     }
 }
 

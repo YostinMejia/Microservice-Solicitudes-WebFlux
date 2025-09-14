@@ -10,6 +10,7 @@ import co.com.bancolombia.model.dto.PaginationParams;
 import co.com.bancolombia.model.dto.PaginationResponse;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
+import co.com.bancolombia.model.state.gateways.StateNotificationGateway;
 import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
 import co.com.bancolombia.model.user.UserGateway;
@@ -30,6 +31,7 @@ public class ApplicationUseCase {
     private final UserGateway userGateway;
     private final AuthGateway authGateway;
     private final StateUseCase stateUseCase;
+    private final StateNotificationGateway stateNotificationGateway;
 
     public Mono<Application> save(Application application, String typeLoanName, String userDocument, String userEmail, String authHeader) {
         final State initialState = new State().toBuilder().name(DefaultProperties.INITIAL_STATE_NAME.getProperty()).build();
@@ -66,8 +68,10 @@ public class ApplicationUseCase {
                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.UNAUTHORIZED_UPDATE_STATE)))
                 .then(Mono.defer(() -> applicationRepository.findById(idApplication)))
                 .zipWhen(application -> stateUseCase.update(application.getIdState(), state))
-                .map(tuple -> tuple.getT1().toBuilder().idState(tuple.getT2().getId()).build())
+                .flatMap(tuple->stateNotificationGateway.notifyStateUpdate(tuple.getT2(),tuple.getT1().getEmail())
+                        .thenReturn(tuple.getT1()))
                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.APPLICATION_LOAN_NOT_FOUND)));
+
     }
 
 }

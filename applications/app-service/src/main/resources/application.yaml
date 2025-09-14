@@ -22,23 +22,27 @@ management:
       probes:
         enabled: true
 cors:
-  allowed-origins: "http://localhost:4200,http://localhost:8081"
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://solicitudes-microservice:4200,http://solicitudes-microservice:8081}
 adapters:
   r2dbc:
-    host: "localhost"
-    port: 5434
-    database: "solicitudes"
-    schema: "public"
-    username: "postgres"
-    password: "1234"
+    host: ${SOLICITUDES_DB_HOST:postgres17_db_app}
+    port: ${SOLICITUDES_DB_PORT:5434}
+    database: ${SOLICITUDES_DB_NAME:solicitudes}
+    schema: ${SOLICITUDES_DB_SCHEMA:public}
+    username: ${SOLICITUDES_DB_USER:postgres}
+    password: ${SOLICITUDES_DB_PASSWORD:1234}
 routes:
   paths:
     applications:
       applications: "/api/v1/solicitudes"
     auth-microservice:
-      baseUrl: "http://localhost:8080"
+      baseUrl: ${AUTH_MICROSERVICE_BASE_URL:http://auth-microservice:8080}
       users:
         existsByDocumentAndEmail: "/api/v1/usuarios/exists"
       auth:
         isSameEmailAsToken: "/api/v1/auth/same-email"
         getRoleByAuthHeaderToken: "/api/v1/auth/role"
+adapter:
+  sqs:
+    region: ${AWS_REGION}
+    queueUrl: ${AWS_SQS_QUEUE_URL}
