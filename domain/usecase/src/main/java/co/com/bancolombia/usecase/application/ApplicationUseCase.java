@@ -4,6 +4,7 @@ import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.application.dto.ApplicationDetails;
 import co.com.bancolombia.model.application.dto.ApplicationFilter;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
+import co.com.bancolombia.model.application.gateways.DebtCapacityGateway;
 import co.com.bancolombia.model.auth.Role;
 import co.com.bancolombia.model.auth.gateway.AuthGateway;
 import co.com.bancolombia.model.dto.PaginationParams;
@@ -32,6 +33,7 @@ public class ApplicationUseCase {
     private final AuthGateway authGateway;
     private final StateUseCase stateUseCase;
     private final StateNotificationGateway stateNotificationGateway;
+    private final DebtCapacityGateway debtCapacityGateway;
 
     public Mono<Application> save(Application application, String typeLoanName, String userDocument, String userEmail, String authHeader) {
         final State initialState = new State().toBuilder().name(DefaultProperties.INITIAL_STATE_NAME.getProperty()).build();
@@ -72,6 +74,10 @@ public class ApplicationUseCase {
                         .thenReturn(tuple.getT1()))
                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.APPLICATION_LOAN_NOT_FOUND)));
 
+    }
+
+    public Mono<String> debtCapacity(double totalIncome, double currentMonthlyDebt, double interestRate, int termMonths, float loanAmount ){
+        return debtCapacityGateway.loanDecision(totalIncome,currentMonthlyDebt,interestRate,termMonths,loanAmount);
     }
 
 }

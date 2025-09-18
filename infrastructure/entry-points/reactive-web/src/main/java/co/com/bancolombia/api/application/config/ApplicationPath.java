@@ -9,4 +9,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "routes.paths.applications")
 public class ApplicationPath {
     private String applications;
+    private String calculateDebtCapacity;
 }

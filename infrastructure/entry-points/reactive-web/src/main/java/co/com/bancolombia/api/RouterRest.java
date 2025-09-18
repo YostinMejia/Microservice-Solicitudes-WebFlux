@@ -79,7 +79,8 @@ public class RouterRest {
     public RouterFunction<ServerResponse> routerFunction(ApplicationHandler applicationHandler) {
         return route(POST(applicationPath.getApplications()), applicationHandler::listenPOSTApplication)
                 .andRoute(PUT(applicationPath.getApplications()),applicationHandler::listenUPDATEApplicationState)
-                .andRoute(GET(applicationPath.getApplications()),applicationHandler::listenGETFindByFilter);
+                .andRoute(GET(applicationPath.getApplications()),applicationHandler::listenGETFindByFilter)
+                .andRoute(POST(applicationPath.getCalculateDebtCapacity()),applicationHandler::listenCalculateDebtCapacity);
 
     }
 }

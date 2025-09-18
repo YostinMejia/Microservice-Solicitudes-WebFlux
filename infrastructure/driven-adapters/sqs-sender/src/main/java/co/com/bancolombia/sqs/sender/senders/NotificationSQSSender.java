@@ -1,4 +1,4 @@
-package co.com.bancolombia.sqs.sender;
+package co.com.bancolombia.sqs.sender.senders;
 
 import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.gateways.StateNotificationGateway;
@@ -14,13 +14,13 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 @Service
 @Log4j2
 @RequiredArgsConstructor
-public class SQSSender implements StateNotificationGateway {
+public class NotificationSQSSender implements StateNotificationGateway {
     private final SQSSenderProperties properties;
     private final SqsAsyncClient client;
 
     private SendMessageRequest buildRequest(String message) {
         return SendMessageRequest.builder()
-                .queueUrl(properties.queueUrl())
+                .queueUrl(properties.notificationQueueUrl())
                 .messageBody(message)
                 .build();
     }

@@ -1,6 +1,7 @@
 package co.com.bancolombia.api.application;
 
 import co.com.bancolombia.api.application.dto.CreateApplicationDto;
+import co.com.bancolombia.api.application.dto.DebtCapacityDto;
 import co.com.bancolombia.api.application.dto.UpdateState;
 import co.com.bancolombia.api.helper.RequestValidator;
 import co.com.bancolombia.api.application.mapper.ApplicationDtoMapper;
@@ -63,5 +64,19 @@ public class ApplicationHandler {
                 .map(data -> ResponseMapper.mapBodyResponse(ResponseCode.APPLICATION_STATE_UPDATED, data))
                 .flatMap(responseDto -> ServerResponse.ok().bodyValue(responseDto));
 
+    }
+
+    public Mono<ServerResponse> listenCalculateDebtCapacity(ServerRequest serverRequest){
+        return serverRequest.bodyToMono(DebtCapacityDto.class)
+                .flatMap(requestValidator::validator)
+                .flatMap(debtCapacityDto -> applicationUseCase.debtCapacity(
+                        debtCapacityDto.totalIncome(),
+                        debtCapacityDto.currentMonthlyDebt(),
+                        debtCapacityDto.interestRate(),
+                        debtCapacityDto.termMonths(),
+                        debtCapacityDto.loanAmount()
+                ))
+                .map(messageId->ResponseMapper.mapBodyResponse(ResponseCode.CALCULATE_DEBT_CAPACITY_CREATED,messageId))
+                .flatMap(responseDto->ServerResponse.ok().bodyValue(responseDto));
     }
 }

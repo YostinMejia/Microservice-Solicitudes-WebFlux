@@ -35,6 +35,7 @@ routes:
   paths:
     applications:
       applications: "/api/v1/solicitudes"
+      calculateDebtCapacity: "/api/v1/calcular-capacidad"
     auth-microservice:
       baseUrl: ${AUTH_MICROSERVICE_BASE_URL:http://auth-microservice:8080}
       users:
@@ -45,4 +46,5 @@ routes:
 adapter:
   sqs:
     region: ${AWS_REGION}
-    queueUrl: ${AWS_SQS_QUEUE_URL}
+    notificationQueueUrl: ${AWS_NOTIFICATION_SQS_QUEUE_URL}
+    debtCapacityQueueUrl: ${AWS_DEBT_CAPACITY_SQS_QUEUE_URL}

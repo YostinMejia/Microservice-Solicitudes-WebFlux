@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum ResponseCode implements ResponseMessage {
     APPLICATION_CREATED("201-00", "Application created successfully"),
     APPLICATION_STATE_UPDATED("200-00", "Application state updated successfully"),
-    STATES_PAGINATED("200-00", "States paginated");
+    STATES_PAGINATED("200-00", "States paginated"),
+    CALCULATE_DEBT_CAPACITY_CREATED("200-00", "Create debt capacity created successfully");
 
     private final String businessCode;
     private final String message;
