@@ -74,7 +74,8 @@ public class ApplicationHandler {
                         debtCapacityDto.currentMonthlyDebt(),
                         debtCapacityDto.interestRate(),
                         debtCapacityDto.termMonths(),
-                        debtCapacityDto.loanAmount()
+                        debtCapacityDto.loanAmount(),
+                        debtCapacityDto.idApplication()
                 ))
                 .map(messageId->ResponseMapper.mapBodyResponse(ResponseCode.CALCULATE_DEBT_CAPACITY_CREATED,messageId))
                 .flatMap(responseDto->ServerResponse.ok().bodyValue(responseDto));

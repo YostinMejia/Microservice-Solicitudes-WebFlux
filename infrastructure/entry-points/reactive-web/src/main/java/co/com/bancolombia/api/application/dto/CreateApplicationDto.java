@@ -1,6 +1,5 @@
 package co.com.bancolombia.api.application.dto;
 
-
 import jakarta.validation.constraints.*;
 
 public record CreateApplicationDto(

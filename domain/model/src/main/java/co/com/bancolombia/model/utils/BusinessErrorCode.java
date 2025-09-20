@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum BusinessErrorCode implements ResponseMessage{
-    VALIDATION_FAILED("B400-00", "Create user validation failed"),
+    VALIDATION_FAILED("B400-00", "Validation failed"),
     APPLICATION_LOAN_NOT_FOUND("B404-10", "Application Loan does not exist"),
     TYPE_LOAN_NOT_FOUND("B404-10", "Type Loan does not exist"),
     STATE_NOT_FOUND("B404-10", "state does not exist"),

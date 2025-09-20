@@ -9,5 +9,6 @@ dependencies {
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
     implementation "org.springdoc:springdoc-openapi-starter-webflux-ui:${openapiVersion}"
     testImplementation "com.squareup.okhttp3:mockwebserver:${okhttp3Version}"
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
 }

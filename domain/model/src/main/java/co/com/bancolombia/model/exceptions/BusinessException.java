@@ -1,6 +1,7 @@
 package co.com.bancolombia.model.exceptions;
 
 import co.com.bancolombia.model.utils.BusinessErrorCode;
+import co.com.bancolombia.model.utils.ResponseMessage;
 import lombok.Getter;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public class BusinessException extends RuntimeException {
      *
      * @param businessErrorCode The enum representing the business error.
      */
-    public BusinessException(BusinessErrorCode businessErrorCode) {
+    public BusinessException(ResponseMessage businessErrorCode) {
         super(businessErrorCode.getMessage());
         this.code = businessErrorCode.getBusinessCode();
         this.errors = null; // No list of errors for a single exception
@@ -27,7 +28,7 @@ public class BusinessException extends RuntimeException {
      * @param errors The list of specific error messages from validation.
      * @param businessErrorCode The enum representing the business error.
      */
-    public BusinessException(List<String> errors, BusinessErrorCode businessErrorCode) {
+    public BusinessException(List<String> errors, ResponseMessage businessErrorCode) {
         super(businessErrorCode.getMessage());
         this.code = businessErrorCode.getBusinessCode();
         this.errors = errors;

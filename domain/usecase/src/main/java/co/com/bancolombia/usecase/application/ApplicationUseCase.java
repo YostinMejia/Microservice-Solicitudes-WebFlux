@@ -11,6 +11,7 @@ import co.com.bancolombia.model.dto.PaginationParams;
 import co.com.bancolombia.model.dto.PaginationResponse;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
+import co.com.bancolombia.model.state.States;
 import co.com.bancolombia.model.state.gateways.StateNotificationGateway;
 import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
@@ -66,18 +67,29 @@ public class ApplicationUseCase {
 
     public Mono<Application> update(UUID idApplication, String state, String authHeader) {
         return authGateway.getRolByAuthHeaderToken(authHeader)
-                .filter(email -> !email.isEmpty() || !email.equals(Role.ADVISOR.getValue()))
+                .filter(role -> !role.isEmpty() || !role.equals(Role.ADVISOR.getValue()))
                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.UNAUTHORIZED_UPDATE_STATE)))
-                .then(Mono.defer(() -> applicationRepository.findById(idApplication)))
+                .then(Mono.defer(() -> this.findApplicationById(idApplication)))
                 .zipWhen(application -> stateUseCase.update(application.getIdState(), state))
-                .flatMap(tuple->stateNotificationGateway.notifyStateUpdate(tuple.getT2(),tuple.getT1().getEmail())
-                        .thenReturn(tuple.getT1()))
-                .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.APPLICATION_LOAN_NOT_FOUND)));
+                .flatMap(tuple->this.notifyUpdate(tuple.getT1().getId(), tuple.getT2().getName(),tuple.getT1().getEmail())
+                        .thenReturn(tuple.getT1()));
+    }
+
+    public Mono<String> notifyUpdate(UUID idApplication, String newState, String email) {
+        System.out.println("notifyUpdate called");
+        return stateNotificationGateway.notifyStateUpdate(idApplication, newState,email);
 
     }
 
-    public Mono<String> debtCapacity(double totalIncome, double currentMonthlyDebt, double interestRate, int termMonths, float loanAmount ){
-        return debtCapacityGateway.loanDecision(totalIncome,currentMonthlyDebt,interestRate,termMonths,loanAmount);
+    public Mono<Application> findApplicationById(UUID idApplication){
+        return applicationRepository.findById(idApplication)
+                 .switchIfEmpty(Mono.error(new BusinessException(BusinessErrorCode.APPLICATION_LOAN_NOT_FOUND)));
+
+    }
+
+    public Mono<String> debtCapacity(double totalIncome, double currentMonthlyDebt, double interestRate, int termMonths, float loanAmount, UUID idApplication) {
+        return findApplicationById(idApplication)
+                .flatMap(application->debtCapacityGateway.loanDecision(totalIncome, currentMonthlyDebt, interestRate, termMonths, loanAmount, idApplication, application.getEmail()));
     }
 
 }
