@@ -76,9 +76,7 @@ public class ApplicationUseCase {
     }
 
     public Mono<String> notifyUpdate(UUID idApplication, String newState, String email) {
-        System.out.println("notifyUpdate called");
         return stateNotificationGateway.notifyStateUpdate(idApplication, newState,email);
-
     }
 
     public Mono<Application> findApplicationById(UUID idApplication){

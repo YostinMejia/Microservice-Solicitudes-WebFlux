@@ -1,6 +1,5 @@
 package co.com.bancolombia.usecase.state;
 
-import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.States;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 

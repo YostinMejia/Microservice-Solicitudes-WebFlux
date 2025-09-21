@@ -8,9 +8,11 @@ import co.com.bancolombia.api.application.mapper.ApplicationDtoMapper;
 import co.com.bancolombia.api.helper.RequestValidator;
 import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
+import co.com.bancolombia.model.application.gateways.DebtCapacityGateway;
 import co.com.bancolombia.model.auth.gateway.AuthGateway;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
+import co.com.bancolombia.model.state.gateways.StateNotificationGateway;
 import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.TypeLoan;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
@@ -18,6 +20,7 @@ import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
 import co.com.bancolombia.usecase.state.StateUseCase;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +47,7 @@ import static org.mockito.BDDMockito.given;
         ApplicationUseCase.class,
         RequestValidator.class,
         GlobalErrorWebExceptionHandler.class,
-        StateUseCase.class
+        StateUseCase.class,
 })
 @TestPropertySource(properties = {
         "routes.paths.applications.applications=/api/v1/solicitudes"
@@ -76,6 +79,15 @@ class RouterRestTest {
 
     @MockitoBean
     private ApplicationDtoMapper applicationDtoMapper;
+
+    @MockitoBean
+    private StateNotificationGateway stateNotificationGateway;
+
+    @MockitoBean
+    private DebtCapacityGateway debtCapacityGateway;
+
+    @MockitoBean
+    private ObjectMapper objectMapper;
 
     private String authHeader;
     private UUID typeLoanId;

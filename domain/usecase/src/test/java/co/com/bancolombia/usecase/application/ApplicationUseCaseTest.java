@@ -4,6 +4,7 @@ import co.com.bancolombia.model.application.Application;
 import co.com.bancolombia.model.application.dto.ApplicationDetails;
 import co.com.bancolombia.model.application.dto.ApplicationFilter;
 import co.com.bancolombia.model.application.gateways.ApplicationRepository;
+import co.com.bancolombia.model.application.gateways.DebtCapacityGateway;
 import co.com.bancolombia.model.auth.Role;
 import co.com.bancolombia.model.auth.gateway.AuthGateway;
 import co.com.bancolombia.model.dto.PaginationParams;
@@ -13,6 +14,7 @@ import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
 import co.com.bancolombia.model.state.States;
 import co.com.bancolombia.model.state.States;
+import co.com.bancolombia.model.state.gateways.StateNotificationGateway;
 import co.com.bancolombia.model.state.gateways.StateRepository;
 import co.com.bancolombia.model.typeloan.TypeLoan;
 import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
@@ -62,9 +64,15 @@ class ApplicationUseCaseTest {
     @Mock
     private AuthGateway authGateway;
 
+    @Mock
+    private StateNotificationGateway stateNotificationGateway;
+
+    @Mock
+    private DebtCapacityGateway debtCapacityGateway;
+
+
     private final UUID typeLoanId = UUID.randomUUID();
     private final UUID stateId = UUID.randomUUID();
-    private final UUID applicationId = UUID.randomUUID();
 
     private final Application testApplication = Application.builder()
             .amount(5000)
@@ -274,32 +282,87 @@ class ApplicationUseCaseTest {
 
         verify(authGateway).getRolByAuthHeaderToken(authHeader);
         verify(applicationRepository).findById(applicationId);
-        verify(stateUseCase, never()).update(any(), any());
     }
 
     @Test
     void givenUpdate_whenParamsMatch_thenShouldUpdateApplicationState() {
         // Arrange
         UUID applicationId = UUID.randomUUID();
-        UUID oldStateId = UUID.randomUUID();
-        UUID newStateId = UUID.randomUUID();
-        Application existingApplication = Application.builder().id(applicationId).idState(oldStateId).build();
-        State updatedState = State.builder().id(newStateId).name(States.APPROVED.getValue()).build();
+        UUID existingStateId = UUID.randomUUID();
+
+        Application existingApplication = testApplication.toBuilder()
+                .id(applicationId)
+                .idState(existingStateId)
+                .email("test@mail.com")
+                .build();
+
+        State updatedState = State.builder().id(existingStateId).name(States.APPROVED.getValue()).build();
 
         given(authGateway.getRolByAuthHeaderToken(authHeader)).willReturn(Mono.just(Role.ADMINISTRATOR.getValue()));
         given(applicationRepository.findById(applicationId)).willReturn(Mono.just(existingApplication));
-        given(stateUseCase.update(oldStateId, States.APPROVED.getValue())).willReturn(Mono.just(updatedState));
+        given(stateUseCase.update(existingStateId, States.APPROVED.getValue())).willReturn(Mono.just(updatedState));
+        given(stateNotificationGateway.notifyStateUpdate(any(UUID.class), any(String.class), any(String.class))).willReturn(Mono.just("Notification sent"));
 
         // Act
         Mono<Application> result = applicationUseCase.update(applicationId, States.APPROVED.getValue(), authHeader);
 
         // Assert
         StepVerifier.create(result)
-                .expectNextMatches(app -> app.getId().equals(applicationId) && app.getIdState().equals(newStateId))
+                .expectNextMatches(app -> app.getId().equals(applicationId) && app.getIdState().equals(existingStateId))
                 .verifyComplete();
 
         verify(authGateway).getRolByAuthHeaderToken(authHeader);
         verify(applicationRepository).findById(applicationId);
-        verify(stateUseCase).update(oldStateId, States.APPROVED.getValue());
+        verify(stateUseCase).update(existingStateId, States.APPROVED.getValue());
+        verify(stateNotificationGateway).notifyStateUpdate(applicationId, updatedState.getName(), existingApplication.getEmail());
+    }
+
+
+    @Test
+    void givenDebtCapacity_whenApplicationDoesNotExists_thenShouldRaiseException() {
+        // Arrange
+        UUID idApplication = UUID.randomUUID();
+
+        given(applicationRepository.findById(idApplication)).willReturn(Mono.empty());
+
+        // Act
+        Mono<String> result = applicationUseCase.debtCapacity(1000.0, 500.0, 0.05, 12, 10000.0f, idApplication);
+
+        // Assert
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable ->
+                        throwable instanceof BusinessException &&
+                                ((BusinessException) throwable).getCode().equals(BusinessErrorCode.APPLICATION_LOAN_NOT_FOUND.getBusinessCode())
+                )
+                .verify();
+
+        verify(applicationRepository).findById(idApplication);
+    }
+
+    @Test
+    void givenDebtCapacity_whenApplicationExist_thenShouldReturnString() {
+        // Arrange
+        UUID idApplication = UUID.randomUUID();
+        Application application = testApplication.toBuilder()
+                .id(idApplication)
+                .email("test@mail.com")
+                .build();
+
+        String expectedResult = "loan_decision_message_id_12345";
+
+        given(applicationRepository.findById(idApplication)).willReturn(Mono.just(application));
+        given(debtCapacityGateway.loanDecision(any(double.class), any(double.class), any(double.class), any(int.class), any(float.class), any(UUID.class), any(String.class)))
+                .willReturn(Mono.just(expectedResult));
+
+        // Act
+        Mono<String> result = applicationUseCase.debtCapacity(1000.0, 500.0, 0.05, 12, 10000.0f, idApplication);
+
+        // Assert
+        StepVerifier.create(result)
+                .expectNext(expectedResult)
+                .verifyComplete();
+
+        verify(applicationRepository).findById(idApplication);
+        verify(debtCapacityGateway).loanDecision(1000.0, 500.0, 0.05, 12, 10000.0f, idApplication, application.getEmail());
     }
 }

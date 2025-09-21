@@ -1,6 +1,8 @@
 package co.com.bancolombia.config;
 
+import co.com.bancolombia.model.application.gateways.DebtCapacityGateway;
 import co.com.bancolombia.model.auth.gateway.AuthGateway;
+import co.com.bancolombia.model.state.gateways.StateNotificationGateway;
 import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.usecase.application.ApplicationUseCase;
 import org.junit.jupiter.api.Test;
@@ -58,7 +60,6 @@ class UseCasesConfigTest {
             return Mockito.mock(co.com.bancolombia.model.state.gateways.StateRepository.class);
         }
 
-
         @Bean
         public AuthGateway authGateway() {return Mockito.mock(AuthGateway.class);}
 
@@ -66,5 +67,12 @@ class UseCasesConfigTest {
         public UserGateway userGateway() {
             return Mockito.mock(UserGateway.class);
         }
+
+        @Bean
+        public StateNotificationGateway stateNotificationGateway() {return Mockito.mock(StateNotificationGateway.class);}
+
+        @Bean
+        public DebtCapacityGateway debtCapacityGateway() {return Mockito.mock(DebtCapacityGateway.class);}
+
     }
 }
