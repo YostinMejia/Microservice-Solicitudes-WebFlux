@@ -3,6 +3,8 @@ package co.com.bancolombia.api;
 import co.com.bancolombia.api.application.ApplicationHandler;
 import co.com.bancolombia.api.application.config.ApplicationPath;
 import co.com.bancolombia.api.application.dto.CreateApplicationDto;
+import co.com.bancolombia.api.application.dto.DebtCapacityDto;
+import co.com.bancolombia.api.application.dto.UpdateState;
 import co.com.bancolombia.model.dto.MultipleErrorsResponse;
 import co.com.bancolombia.model.dto.PaginationResponse;
 import co.com.bancolombia.model.dto.Response;
@@ -70,6 +72,39 @@ public class RouterRest {
 
                             )),
 
+
+
+                    @RouterOperation(method = RequestMethod.PUT, path = "/api/v1/solicitudes",
+                            operation = @Operation(operationId = "updateApplicationState", summary = "Update Application State", tags = {"Application"},
+
+                                    responses = {
+                                            @ApiResponse(responseCode = "201", description = "Successful updated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Response.class)))
+                                            , @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MultipleErrorsResponse.class)))
+                                            ,@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = "application/json"))
+                                            , @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SingleErrorResponse.class)))
+                                    },
+                                    requestBody = @RequestBody(
+                                            required = true,
+                                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UpdateState.class))
+                                    )
+
+                            )),
+
+                    @RouterOperation(method = RequestMethod.POST, path = "/api/v1/calcular-capacidad",
+                            operation = @Operation(operationId = "calculateDebtCapacity", summary = "Calculate Debt Capacity", tags = {"Application"},
+
+                                    responses = {
+                                            @ApiResponse(responseCode = "201", description = "Calculation request created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Response.class)))
+                                            , @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MultipleErrorsResponse.class)))
+                                            ,@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = "application/json"))
+                                            , @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SingleErrorResponse.class)))
+                                    },
+                                    requestBody = @RequestBody(
+                                            required = true,
+                                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = DebtCapacityDto.class))
+                                    )
+
+                            )),
 
             }
 
