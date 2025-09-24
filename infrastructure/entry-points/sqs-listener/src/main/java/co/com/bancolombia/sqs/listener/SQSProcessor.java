@@ -24,7 +24,7 @@ public class SQSProcessor implements Function<Message, Mono<Void>> {
     public Mono<Void> apply(Message message) {
         System.out.println(message.body());
         log.info("{} received message from sqs", message.body());
-        return parseBody(message.body()).zipWhen(dto -> applicationUseCase.findApplicationById(dto.idApplication()))
+        return parseBody(message.body()).zipWhen(dto ->applicationUseCase.updateApplicationState(dto.idApplication(),dto.state()))
                 .doOnNext(dto-> log.info("dto received {}", dto.getT1()))
                 .flatMap(tuple -> applicationUseCase.notifyUpdate(tuple.getT1().idApplication(),tuple.getT1().state(),tuple.getT2().getEmail()))
                 .thenEmpty(Mono.empty());

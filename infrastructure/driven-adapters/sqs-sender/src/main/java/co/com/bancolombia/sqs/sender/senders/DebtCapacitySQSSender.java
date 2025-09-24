@@ -33,9 +33,9 @@ public class DebtCapacitySQSSender implements DebtCapacityGateway {
 
 
     @Override
-    public Mono<String> loanDecision(double totalIncome, double currentMonthlyDebt, double interestRate, int termMonths, float loanAmount, UUID idApplication, String email) {
+    public Mono<String> loanDecision(Long totalIncome, double currentMonthlyDebt, double interestRate, int termMonths, float loanAmount, UUID idApplication,String email) {
 
-        return createMessageFromState(totalIncome, currentMonthlyDebt, interestRate, termMonths, loanAmount, idApplication, email)
+        return createMessageFromState(totalIncome, currentMonthlyDebt, interestRate, termMonths, loanAmount, idApplication ,email)
                 .map(this::buildRequest)
                 .flatMap(request -> Mono.fromFuture(client.sendMessage(request)))
                 .doOnNext(response -> log.debug("Message sent {}", response.messageId()))
@@ -43,7 +43,7 @@ public class DebtCapacitySQSSender implements DebtCapacityGateway {
 
     }
 
-    private Mono<String> createMessageFromState(double totalIncome, double currentMonthlyDebt, double interestRate, int termMonths, float loanAmount, UUID idApplication, String email) {
+    private Mono<String> createMessageFromState(double totalIncome, double currentMonthlyDebt, double interestRate, int termMonths, float loanAmount, UUID idApplication,String email) {
         return Mono.fromCallable(() -> {
             ObjectMapper mapper = new ObjectMapper();
 
@@ -53,11 +53,12 @@ public class DebtCapacitySQSSender implements DebtCapacityGateway {
             payload.put("interestRate", interestRate);
             payload.put("termMonths", termMonths);
             payload.put("loanAmount", loanAmount);
-            payload.put("idApplication", idApplication.toString());
+            payload.put("idApplication", idApplication);
             payload.put("email", email);
 
             return mapper.writeValueAsString(payload);
         }).onErrorMap(e -> new BusinessException(ValidationErrorMessages.JSON_PARSE_FAILED));
     }
+
 
 }

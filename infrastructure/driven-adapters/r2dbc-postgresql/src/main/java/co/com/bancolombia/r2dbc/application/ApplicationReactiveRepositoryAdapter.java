@@ -29,6 +29,11 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
         String,
         ApplicationReactiveRepository
         > implements ApplicationRepository {
+
+    private final DatabaseClient databaseClient;
+    private final TransactionalOperator transactionalOperator;
+
+
     public ApplicationReactiveRepositoryAdapter(ApplicationReactiveRepository repository, ObjectMapper mapper, TransactionalOperator transactionalOperator, DatabaseClient databaseClient) {
         super(repository, mapper, d -> mapper.map(d, Application.class));
         this.transactionalOperator = transactionalOperator;
@@ -36,8 +41,6 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
 
     }
 
-    private final DatabaseClient databaseClient;
-    private final TransactionalOperator transactionalOperator;
 
     @Override
     public Mono<Application> save(Application entity) {
@@ -99,6 +102,11 @@ public class ApplicationReactiveRepositoryAdapter extends ReactiveAdapterOperati
                             allData
                     ));
         });
+    }
+
+    @Override
+    public Mono<Double> currentMonthlyDebt(String email) {
+        return this.repository.currentMonthlyDebt(email);
     }
 
     private String addDynamicFilter(ApplicationFilter applicationFilter) {

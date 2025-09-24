@@ -9,10 +9,8 @@ import co.com.bancolombia.model.auth.Role;
 import co.com.bancolombia.model.auth.gateway.AuthGateway;
 import co.com.bancolombia.model.dto.PaginationParams;
 import co.com.bancolombia.model.dto.PaginationResponse;
-import co.com.bancolombia.model.auth.Role;
 import co.com.bancolombia.model.exceptions.BusinessException;
 import co.com.bancolombia.model.state.State;
-import co.com.bancolombia.model.state.States;
 import co.com.bancolombia.model.state.States;
 import co.com.bancolombia.model.state.gateways.StateNotificationGateway;
 import co.com.bancolombia.model.state.gateways.StateRepository;
@@ -21,7 +19,6 @@ import co.com.bancolombia.model.typeloan.gateways.TypeLoanRepository;
 import co.com.bancolombia.model.user.UserGateway;
 import co.com.bancolombia.model.utils.BusinessErrorCode;
 import co.com.bancolombia.usecase.state.StateUseCase;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -319,14 +316,14 @@ class ApplicationUseCaseTest {
 
 
     @Test
-    void givenDebtCapacity_whenApplicationDoesNotExists_thenShouldRaiseException() {
+    void givenCalculateDebtCapacity_whenApplicationDoesNotExists_thenShouldRaiseException() {
         // Arrange
         UUID idApplication = UUID.randomUUID();
 
         given(applicationRepository.findById(idApplication)).willReturn(Mono.empty());
 
         // Act
-        Mono<String> result = applicationUseCase.debtCapacity(1000.0, 500.0, 0.05, 12, 10000.0f, idApplication);
+        Mono<String> result = applicationUseCase.calculateDebtCapacity(0.05, 12, 10000.0f, idApplication,"email@gmail.com");
 
         // Assert
         StepVerifier.create(result)
@@ -340,7 +337,7 @@ class ApplicationUseCaseTest {
     }
 
     @Test
-    void givenDebtCapacity_whenApplicationExist_thenShouldReturnString() {
+    void givenCalculateDebtCapacity_whenApplicationExist_thenShouldReturnString() {
         // Arrange
         UUID idApplication = UUID.randomUUID();
         Application application = testApplication.toBuilder()
@@ -351,11 +348,11 @@ class ApplicationUseCaseTest {
         String expectedResult = "loan_decision_message_id_12345";
 
         given(applicationRepository.findById(idApplication)).willReturn(Mono.just(application));
-        given(debtCapacityGateway.loanDecision(any(double.class), any(double.class), any(double.class), any(int.class), any(float.class), any(UUID.class), any(String.class)))
+        given(debtCapacityGateway.loanDecision(any(Long.class), any(double.class), any(double.class), any(int.class), any(float.class),  any(UUID.class),any(String.class)))
                 .willReturn(Mono.just(expectedResult));
 
         // Act
-        Mono<String> result = applicationUseCase.debtCapacity(1000.0, 500.0, 0.05, 12, 10000.0f, idApplication);
+        Mono<String> result = applicationUseCase.calculateDebtCapacity( 0.05, 12, 10000.0f,  application.getId(),application.getEmail());
 
         // Assert
         StepVerifier.create(result)
@@ -363,6 +360,6 @@ class ApplicationUseCaseTest {
                 .verifyComplete();
 
         verify(applicationRepository).findById(idApplication);
-        verify(debtCapacityGateway).loanDecision(1000.0, 500.0, 0.05, 12, 10000.0f, idApplication, application.getEmail());
+        verify(debtCapacityGateway).loanDecision(1000L, 500.0, 0.05, 12, 10000.0f,  application.getId(),application.getEmail());
     }
 }

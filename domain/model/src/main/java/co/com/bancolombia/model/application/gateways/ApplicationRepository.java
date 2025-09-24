@@ -17,4 +17,6 @@ public interface ApplicationRepository {
 
     Mono<PaginationResponse<ApplicationDetails>> findByFilter(ApplicationFilter applicationFilter, PaginationParams paginationParams);
 
+    Mono<Double> currentMonthlyDebt(String email);
+
 }

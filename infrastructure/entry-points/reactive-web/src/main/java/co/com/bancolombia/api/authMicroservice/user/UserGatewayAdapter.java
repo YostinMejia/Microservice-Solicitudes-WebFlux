@@ -43,4 +43,23 @@ public class UserGatewayAdapter implements UserGateway {
                 .flatMap(response -> Mono.just(response.data()));
     }
 
+    @Override
+    public Mono<Long> getBaseSalary(String email) {
+        return webClient.get()
+                .uri(userPath.getBaseSalary(),email)
+                .retrieve()
+                .onStatus(
+                        status -> !status.is2xxSuccessful(),
+                        response -> response.bodyToMono(Map.class)
+                                .flatMap(body -> {
+                                    String message = (String) body.get("message");
+                                    String code = (String) body.get("code");
+                                    return Mono.error(new BusinessException(message, code));
+                                })
+                )
+                .bodyToMono(new ParameterizedTypeReference<Response<Long>>() {
+                })
+                .map(Response::data);
+    }
+
 }

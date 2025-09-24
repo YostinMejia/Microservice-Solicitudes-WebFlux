@@ -39,6 +39,7 @@ routes:
       baseUrl: "${AUTH_MICROSERVICE_BASE_URL:http://auth-microservice:8080}"
       users:
         existsByDocumentAndEmail: "/api/v1/usuarios/exists"
+        baseSalary: "/api/v1/usuarios/base-salary/{email}"
       auth:
         isSameEmailAsToken: "/api/v1/auth/same-email"
         getRoleByAuthHeaderToken: "/api/v1/auth/role"

@@ -69,13 +69,12 @@ public class ApplicationHandler {
     public Mono<ServerResponse> listenCalculateDebtCapacity(ServerRequest serverRequest){
         return serverRequest.bodyToMono(DebtCapacityDto.class)
                 .flatMap(requestValidator::validator)
-                .flatMap(debtCapacityDto -> applicationUseCase.debtCapacity(
-                        debtCapacityDto.totalIncome(),
-                        debtCapacityDto.currentMonthlyDebt(),
+                .flatMap(debtCapacityDto -> applicationUseCase.calculateDebtCapacity(
                         debtCapacityDto.interestRate(),
                         debtCapacityDto.termMonths(),
                         debtCapacityDto.loanAmount(),
-                        debtCapacityDto.idApplication()
+                        debtCapacityDto.idApplication(),
+                        debtCapacityDto.email()
                 ))
                 .map(messageId->ResponseMapper.mapBodyResponse(ResponseCode.CALCULATE_DEBT_CAPACITY_CREATED,messageId))
                 .flatMap(responseDto->ServerResponse.ok().bodyValue(responseDto));

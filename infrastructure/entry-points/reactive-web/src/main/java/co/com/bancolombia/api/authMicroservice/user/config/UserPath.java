@@ -10,4 +10,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class UserPath {
     private String existsByDocumentAndEmail;
     private String baseUrl;
+    private String baseSalary;
 }

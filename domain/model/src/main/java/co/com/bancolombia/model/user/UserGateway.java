@@ -4,4 +4,5 @@ import reactor.core.publisher.Mono;
 
 public interface UserGateway {
     Mono<Boolean> existByDocumentAndEmail(String document, String email, String authHeader);
+    Mono<Long> getBaseSalary(String email);
 }
